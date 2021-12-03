@@ -1,0 +1,19 @@
+{
+    "configurations": {
+        "default": {
+            "proxy": "https://devnet-api.elrond.com",
+            "chainID": "D"
+        }
+    },
+    "contract":{
+        "deploy":{
+            "verbose": true,
+            "bytecode": "output/egld-loto.wasm",
+            "recall-nonce": true,
+            "pem": "~/loto/contract/wallet/wallet-owner.pem",
+            "gas-limit": 599999999,
+            "send": true,
+            "outfile": "deploy-testnet.interaction.json"
+        }
+     }
+}
