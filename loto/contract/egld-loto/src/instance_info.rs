@@ -5,11 +5,8 @@ use elrond_wasm::String;
 
 elrond_wasm::derive_imports!();
 
-//mod owner_info;
-//use owner_info::OwnerInfo;
-
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
-pub struct OwnerInfo {
+pub struct SponsorInfo {
 	pub pseudo: String,
 	pub url: String,
 	pub picture_link: String,
@@ -18,10 +15,10 @@ pub struct OwnerInfo {
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct InstanceInfo<BigUint: BigUintApi> {
-	pub owner_address: Address,
+	pub sponsor_address: Address,
 	pub prize: BigUint,
-	pub nb_players: u32,
-	//pub owner_info: OwnerInfo,
+	//pub nb_players: u32,
+	//pub sponsor_info: SponsorInfo,
 	pub deadline: u64,
 	pub winner_address: Address,
 	pub claimed_status: bool,

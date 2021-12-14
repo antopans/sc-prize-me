@@ -12,10 +12,8 @@ CHAIN=D
 ######################################################################
 # SC Management
 ######################################################################
-FEE_PERCENT="2"
-
 deploy() {
-    erdpy --verbose contract deploy --bytecode ${BYTECODE} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --arguments ${FEE_PERCENT} --send --outfile="deploy-devnet.interaction.json" --proxy=${PROXY} --chain=${CHAIN} || return
+    erdpy --verbose contract deploy --bytecode ${BYTECODE} --recall-nonce --pem=${OWNER} --gas-limit=500000000 --send --outfile="deploy-devnet.interaction.json" --proxy=${PROXY} --chain=${CHAIN} || return
 
     TRANSACTION=$(erdpy data parse --file="deploy-devnet.interaction.json" --expression="data['emitted_tx']['hash']")
     ADDRESS=$(erdpy data parse --file="deploy-devnet.interaction.json" --expression="data['emitted_tx']['address']")
@@ -28,16 +26,23 @@ deploy() {
 }
 
 upgrade() {
-    erdpy --verbose contract upgrade ${ADDRESS} --bytecode ${BYTECODE} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --arguments ${FEE_PERCENT} --send --outfile="deploy-devnet.interaction.json" --proxy=${PROXY} --chain=${CHAIN} || return
+    erdpy --verbose contract upgrade ${ADDRESS} --bytecode ${BYTECODE} --recall-nonce --pem=${OWNER} --gas-limit=500000000 --send --outfile="deploy-devnet.interaction.json" --proxy=${PROXY} --chain=${CHAIN} || return
 }
 
 ######################################################################
 # Administrator API
 ######################################################################
 
+triggerEndedInstances() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="triggerEndedInstances" --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
+cleanClaimedInstances() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="cleanClaimedInstances" --send --proxy=${PROXY} --chain=${CHAIN}
+}
 
 ######################################################################
-# DApp endpoints : customer API
+# DApp endpoints : sponsor API
 ######################################################################
 EGLD_AMOUNT="10000000000000000"     #10000000000000000 => 0.01 EGLD
 DURATION_IN_S="30"
@@ -65,17 +70,17 @@ play() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="play" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
+# Param1 : Instance ID
+claim() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="claim" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
 ######################################################################
 # DApp view API
 ######################################################################
 
-getInstanceCounter() {
-    erdpy --verbose contract query ${ADDRESS} --function="getInstanceCounter" --proxy=${PROXY} 
-}
-
-# Param1 : Instance ID
-getInstanceInfo() {
-    erdpy --verbose contract query ${ADDRESS} --function="getInstanceInfo" --arguments $1 --proxy=${PROXY} 
+ getNbInstances() {
+    erdpy --verbose contract query ${ADDRESS} --function="getNbInstances" --proxy=${PROXY} 
 }
 
 # Param1 : Instance ID
@@ -84,24 +89,28 @@ getInstanceStatus() {
 }
 
 # Param1 : Instance ID
+getInstanceInfo() {
+    erdpy --verbose contract query ${ADDRESS} --function="getInstanceInfo" --arguments $1 --proxy=${PROXY} 
+}
+
+# Param1 : Instance ID
 getRemainingTime() {
     erdpy --verbose contract query ${ADDRESS} --function="getRemainingTime" --arguments $1 --proxy=${PROXY} 
 }
 
-getNbInstances() {
-    erdpy --verbose contract query ${ADDRESS} --function="getNbInstances" --proxy=${PROXY} 
+# Param1 : Instance status
+isInstanceWithStatus() {
+    erdpy --verbose contract query ${ADDRESS} --function="isInstanceWithStatus" --arguments $1 --proxy=${PROXY} 
 }
 
-getActiveInstances() {
-    erdpy --verbose contract query ${ADDRESS} --function="getActiveInstances" --proxy=${PROXY} 
+# Param1 : Instance status
+getInstanceIDs() {
+    erdpy --verbose contract query ${ADDRESS} --function="getInstanceIDs" --arguments $1 --proxy=${PROXY} 
 }
 
-getInactiveInstances() {
-    erdpy --verbose contract query ${ADDRESS} --function="getInactiveInstances" --proxy=${PROXY} 
-}
-
-#getOwnerInstances() {
-#    erdpy --verbose contract query ${ADDRESS} --function="getOwnerInstances" --proxy=${PROXY} 
+#INSTANCE_SPONSOR="erd1u4kn0mdpnn2geg9fhn7cd0w6m4s7677axy0f6ptw8xz2d4kxyp0sgynsls"
+#getSponsorInstances() {
+#    erdpy --verbose contract query ${ADDRESS} --function="getSponsorInstances" --arguments $INSTANCE_SPONSOR --proxy=${PROXY} 
 #}
 
 
@@ -147,10 +156,6 @@ test3() {
 
 test4() {
     erdpy --verbose contract query ${ADDRESS} --function="test4" --arguments "3" --proxy=${PROXY} 
-}
-
-get_fee() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="get_fee" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 status() {
