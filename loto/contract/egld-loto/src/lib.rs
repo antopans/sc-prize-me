@@ -249,14 +249,14 @@ pub trait Loto {
 	}
 
 	#[view(getRemainingTime)]
-	fn get_remaining_time(&self, iid: u32) -> MultiResult2<SCResult<()>, u64>  {
+	fn get_remaining_time(&self, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<u64>>  {
 		let result;
 
 		// Retrieve instance information
 		match self.instance_info_mapper().get(&iid) {
 			None => {
 				// Instance does not exist
-				result=MultiArg2((sc_error!("Instance does not exists"), 0));
+				result=MultiArg2((sc_error!("Instance does not exists"), OptionalResult::None));
 		},
 			Some(instance_info) => {
 				let current_date_time = self.blockchain().get_block_timestamp();
@@ -266,7 +266,7 @@ pub trait Loto {
 					remaing_time = instance_info.deadline - current_date_time;
 				}
 
-				result=MultiArg2((Ok(()), remaing_time));
+				result=MultiArg2((Ok(()), OptionalResult::Some(remaing_time)));
 			},
 		}
 
