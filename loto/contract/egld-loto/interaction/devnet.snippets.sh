@@ -7,8 +7,6 @@ PROXY=https://devnet-api.elrond.com
 CHAIN=D
 
 
-
-
 ######################################################################
 # SC Management
 ######################################################################
@@ -46,14 +44,13 @@ cleanClaimedInstances() {
 ######################################################################
 EGLD_AMOUNT="10000000000000000"     #10000000000000000 => 0.01 EGLD
 DURATION_IN_S="30"
-PSEUDO="Toto"
-URL="https://www.toto.com/"
-PICTURE_LINK="https://www.toto.com/global_common_2019/index/images/img-about-other.jpg"
-FREE_TEXT="Hello I'm Toto !"
+PSEUDO="0x$(xxd -pu <<< "E-MOON")"
+URL="0x$(xxd -pu <<< "https://emoon.space/")"
+PICTURE_LINK="0x$(xxd -pu <<< "None")"
+FREE_TEXT="0x$(xxd -pu <<< "Buy & sell NFTs !!!")"
 
 createInstance() {
-    #erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="createInstance" --value=${EGLD_AMOUNT} --arguments ${DURATION_IN_S} "${PSEUDO}" "${URL}" "${PICTURE_LINK}" "${FREE_TEXT}" --send --proxy=${PROXY} --chain=${CHAIN}
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="createInstance" --value=${EGLD_AMOUNT} --arguments ${DURATION_IN_S} --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="createInstance" --value=${EGLD_AMOUNT} --arguments ${DURATION_IN_S} ${PSEUDO} ${URL} ${PICTURE_LINK} ${FREE_TEXT} --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # Param1 : Instance ID
@@ -112,6 +109,8 @@ getInstanceIDs() {
 #getSponsorInstances() {
 #    erdpy --verbose contract query ${ADDRESS} --function="getSponsorInstances" --arguments $INSTANCE_SPONSOR --proxy=${PROXY} 
 #}
+
+
 
 
 

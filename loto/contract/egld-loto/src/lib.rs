@@ -2,8 +2,6 @@
 
 elrond_wasm::imports!();
 
-use elrond_wasm::String;
-
 mod instance_info;
 mod instance_status;
 mod random;
@@ -60,8 +58,14 @@ pub trait Loto {
 	/////////////////////////////////////////////////////////////////////
 	#[payable("EGLD")]
 	#[endpoint(createInstance)]
-	//fn create_instance(&self, #[payment] egld_amount: Self::BigUint, duration_in_s: u64, pseudo: String, url: String, picture_link: String, free_text: String) -> MultiResult2<SCResult<()>, u32>  {
-	fn create_instance(&self, #[payment] egld_amount: BigUint, duration_in_s: u64) -> MultiResult2<SCResult<()>, u32>  {
+	fn create_instance(&self, 
+		#[payment] egld_amount: BigUint, 
+		duration_in_s: u64, 
+		pseudo: ManagedBuffer, 
+		url: ManagedBuffer, 
+		picture_link: ManagedBuffer, 
+		free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, u32>  {
+		
 		let result;
 		
 		// Check validity of parameters 
@@ -77,18 +81,18 @@ pub trait Loto {
 		let new_iid = self.iid_counter_mapper().get() + 1;
 
 		// Fill sponsor information
-		//let sponsor_info = SponsorInfo {
-		//	pseudo: pseudo,
-		//	url: url,
-		//	picture_link: picture_link,
-		//	free_text: free_text,
-		//};
+		let sponsor_info = SponsorInfo {
+			pseudo: pseudo,
+			url: url,
+			picture_link: picture_link,
+			free_text: free_text,
+		};
 
 		// Fill instance information
 		let instance_info = InstanceInfo {
 			sponsor_address: self.blockchain().get_caller(),
 			prize: egld_amount,
-			//sponsor_info: sponsor_info,
+			sponsor_info: sponsor_info,
 			deadline: deadline,
 			winner_address: ManagedAddress::zero(),
 			claimed_status: false,
@@ -220,7 +224,12 @@ pub trait Loto {
 	}
 
 	#[view(getInstanceInfo)]
-	fn get_instance_info(&self, iid: u32) -> MultiResult4<SCResult<()>, OptionalResult<InstanceInfo<Self::Api>>, OptionalResult<InstanceStatus>, OptionalResult<usize>>  {		
+	fn get_instance_info(&self, iid: u32) -> MultiResult4<
+		SCResult<()>, 
+		OptionalResult<InstanceInfo<Self::Api>>, 
+		OptionalResult<InstanceStatus>, 
+		OptionalResult<usize>>  {	
+
 		let result: MultiArg4<SCResult<()>, OptionalResult<InstanceInfo<Self::Api>>, OptionalResult<InstanceStatus>, OptionalResult<usize>>;
 
 		// Retrieve instance information
