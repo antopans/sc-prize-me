@@ -1,6 +1,7 @@
 
-use elrond_wasm::api::{BigUintApi};
-use elrond_wasm::types::Address;
+use elrond_wasm::api::ManagedTypeApi;
+use elrond_wasm::types::BigUint;
+use elrond_wasm::types::ManagedAddress;
 use elrond_wasm::String;
 
 elrond_wasm::derive_imports!();
@@ -14,12 +15,11 @@ pub struct SponsorInfo {
 }
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
-pub struct InstanceInfo<BigUint: BigUintApi> {
-	pub sponsor_address: Address,
-	pub prize: BigUint,
-	//pub nb_players: u32,
+pub struct InstanceInfo <M: ManagedTypeApi>{
+	pub sponsor_address: ManagedAddress<M>,
+	pub prize: BigUint<M>,
 	//pub sponsor_info: SponsorInfo,
 	pub deadline: u64,
-	pub winner_address: Address,
+	pub winner_address: ManagedAddress<M>,
 	pub claimed_status: bool,
 }

@@ -1,7 +1,4 @@
 #![no_std]
-#![no_main]
-#![allow(unused_attributes)]
-#![allow(clippy::too_many_arguments)]
 
 elrond_wasm::imports!();
 
@@ -16,8 +13,7 @@ use instance_info::InstanceInfo;
 use instance_status::InstanceStatus;
 use random::Random;
 
-#[elrond_wasm_derive::contract]
-
+#[elrond_wasm::contract]
 pub trait Loto {
 
 	/////////////////////////////////////////////////////////////////////
@@ -65,7 +61,7 @@ pub trait Loto {
 	#[payable("EGLD")]
 	#[endpoint(createInstance)]
 	//fn create_instance(&self, #[payment] egld_amount: Self::BigUint, duration_in_s: u64, pseudo: String, url: String, picture_link: String, free_text: String) -> MultiResult2<SCResult<()>, u32>  {
-	fn create_instance(&self, #[payment] egld_amount: Self::BigUint, duration_in_s: u64) -> MultiResult2<SCResult<()>, u32>  {
+	fn create_instance(&self, #[payment] egld_amount: BigUint, duration_in_s: u64) -> MultiResult2<SCResult<()>, u32>  {
 		let result;
 		
 		// Check validity of parameters 
@@ -92,10 +88,9 @@ pub trait Loto {
 		let instance_info = InstanceInfo {
 			sponsor_address: self.blockchain().get_caller(),
 			prize: egld_amount,
-			//nb_players: 0u32,
 			//sponsor_info: sponsor_info,
 			deadline: deadline,
-			winner_address: Address::zero(),
+			winner_address: ManagedAddress::zero(),
 			claimed_status: false,
 		};
 
@@ -129,7 +124,7 @@ pub trait Loto {
 				}
 				else {
 					// Choose winner 
-					let seed = self.blockchain().get_block_random_seed();
+					let seed = self.blockchain().get_block_random_seed_legacy();
 					let mut rand = Random::new(*seed);
 					let winning_address_index = (rand.next() as usize % self.instance_players_vec_mapper(iid).len()) + 1;
 					updated_instance_info.winner_address = self.instance_players_vec_mapper(iid).get(winning_address_index);
@@ -208,7 +203,7 @@ pub trait Loto {
 					return InstanceStatus::Claimed;
 				}
 				else {
-					if instance_info.winner_address != Address::zero() {
+					if instance_info.winner_address != ManagedAddress::zero() {
 						return InstanceStatus::Triggered;
 					}
 					else {
@@ -225,13 +220,8 @@ pub trait Loto {
 	}
 
 	#[view(getInstanceInfo)]
-	fn get_instance_info(&self, iid: u32) -> MultiResult4<
-		SCResult<()>, 
-		OptionalResult<InstanceInfo<Self::BigUint>>, 
-		OptionalResult<InstanceStatus>, 
-		OptionalResult<usize>>  {
-		
-		let result: MultiArg4<SCResult<()>, OptionalResult<InstanceInfo<Self::BigUint>>, OptionalResult<InstanceStatus>, OptionalResult<usize>>;
+	fn get_instance_info(&self, iid: u32) -> MultiResult4<SCResult<()>, OptionalResult<InstanceInfo<Self::Api>>, OptionalResult<InstanceStatus>, OptionalResult<usize>>  {		
+		let result: MultiArg4<SCResult<()>, OptionalResult<InstanceInfo<Self::Api>>, OptionalResult<InstanceStatus>, OptionalResult<usize>>;
 
 		// Retrieve instance information
 		match self.instance_info_mapper().get(&iid) {
@@ -319,15 +309,15 @@ pub trait Loto {
 
 	// Instance counter
 	#[storage_mapper("iid_counter")]
-	fn iid_counter_mapper(&self) -> SingleValueMapper<Self::Storage, u32>;
+	fn iid_counter_mapper(&self) -> SingleValueMapper<u32>;
 
 	// Instance info
 	#[storage_mapper("instance_info")]
-	fn instance_info_mapper(&self) -> MapMapper<Self::Storage, u32, InstanceInfo<Self::BigUint>>;
+	fn instance_info_mapper(&self) -> MapMapper<u32, InstanceInfo<Self::Api>>;
 
 	// Instance players
 	#[storage_mapper("instance_players_set")]
-	fn instance_players_set_mapper(&self, iid: u32) -> SetMapper<Self::Storage, Address>;
+	fn instance_players_set_mapper(&self, iid: u32) -> SetMapper<ManagedAddress>;
 	#[storage_mapper("instance_players_vec")]
-	fn instance_players_vec_mapper(&self, iid: u32) -> VecMapper<Self::Storage, Address>;
+	fn instance_players_vec_mapper(&self, iid: u32) -> VecMapper<ManagedAddress>;
 }

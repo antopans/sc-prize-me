@@ -1,0 +1,15 @@
+[package]
+name = "egld-loto-meta"
+version = "0.0.0"
+authors = ["You"]
+edition = "2018"
+publish = false
+
+[dependencies.egld-loto]
+path = ".."
+
+[dependencies.elrond-wasm]
+version = "0.25.0"
+
+[dependencies.elrond-wasm-debug]
+version = "0.25.0"
