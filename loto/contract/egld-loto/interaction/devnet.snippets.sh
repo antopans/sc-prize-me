@@ -1,11 +1,12 @@
 #!/bin/bash
-OWNER="../../../wallets/devnet/sc-owner.pem"
 BYTECODE="output/egld-loto.wasm"
 ADDRESS=$(erdpy data load --key=address-devnet)
 DEPLOY_TRANSACTION=$(erdpy data load --key=deployTransaction-devnet)
 PROXY=https://devnet-api.elrond.com
 CHAIN=D
 
+# Wallets 
+source ./interaction/devnet.wallets.sh
 
 ######################################################################
 # SC Management
@@ -31,31 +32,33 @@ upgrade() {
 # Administrator API
 ######################################################################
 
-triggerEndedInstances() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="triggerEndedInstances" --send --proxy=${PROXY} --chain=${CHAIN}
+triggerEnded() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="triggerEnded" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
-cleanClaimedInstances() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="cleanClaimedInstances" --send --proxy=${PROXY} --chain=${CHAIN}
+cleanClaimed() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="cleanClaimed" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 ######################################################################
 # DApp endpoints : sponsor API
 ######################################################################
 EGLD_AMOUNT="10000000000000000"     #10000000000000000 => 0.01 EGLD
-DURATION_IN_S="30"
-PSEUDO="0x$(xxd -pu <<< "E-MOON")"
-URL="0x$(xxd -pu <<< "https://emoon.space/")"
-PICTURE_LINK="0x$(xxd -pu <<< "None")"
-FREE_TEXT="0x$(xxd -pu <<< "Buy & sell NFTs !!!")"
+PSEUDO="0x$(xxd -pu -c 256 <<< "E-MOON")"
+URL="0x$(xxd -pu -c 256  <<< "https://emoon.space/")"
+PICTURE_LINK="0x$(xxd -pu -c 256  <<< "https://media.heartlandtv.com/images/HARVEST+MOON+SD.jpg")"
+FREE_TEXT="0x$(xxd -pu -c 256  <<< "Buy & sell NFTs !!!")"
 
-createInstance() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="createInstance" --value=${EGLD_AMOUNT} --arguments ${DURATION_IN_S} ${PSEUDO} ${URL} ${PICTURE_LINK} ${FREE_TEXT} --send --proxy=${PROXY} --chain=${CHAIN}
+# Param #1 : duration in seconds
+# Param #2 : pem wallet
+create() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=50000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL} ${PICTURE_LINK} ${FREE_TEXT} --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # Param1 : Instance ID
+# Param2 : pem wallet
 trigger() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="trigger" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=50000000 --function="trigger" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 ######################################################################
@@ -63,31 +66,33 @@ trigger() {
 ######################################################################
 
 # Param1 : Instance ID
+# Param2 : pem wallet
 play() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="play" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=50000000 --function="play" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # Param1 : Instance ID
+# Param2 : pem wallet
 claim() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="claim" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=50000000 --function="claim" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 ######################################################################
 # DApp view API
 ######################################################################
 
- getNbInstances() {
-    erdpy --verbose contract query ${ADDRESS} --function="getNbInstances" --proxy=${PROXY} 
+ getNb() {
+    erdpy --verbose contract query ${ADDRESS} --function="getNb" --proxy=${PROXY} 
 }
 
 # Param1 : Instance ID
-getInstanceStatus() {
-    erdpy --verbose contract query ${ADDRESS} --function="getInstanceStatus" --arguments $1 --proxy=${PROXY} 
+getStatus() {
+    erdpy --verbose contract query ${ADDRESS} --function="getStatus" --arguments $1 --proxy=${PROXY} 
 }
 
 # Param1 : Instance ID
-getInstanceInfo() {
-    erdpy --verbose contract query ${ADDRESS} --function="getInstanceInfo" --arguments $1 --proxy=${PROXY} 
+getInfo() {
+    erdpy --verbose contract query ${ADDRESS} --function="getInfo" --arguments $1 --proxy=${PROXY} 
 }
 
 # Param1 : Instance ID
@@ -96,74 +101,31 @@ getRemainingTime() {
 }
 
 # Param1 : Instance status
-isInstanceWithStatus() {
-    erdpy --verbose contract query ${ADDRESS} --function="isInstanceWithStatus" --arguments $1 --proxy=${PROXY} 
+hasStatus() {
+    erdpy --verbose contract query ${ADDRESS} --function="hasStatus" --arguments $1 --proxy=${PROXY} 
 }
 
 # Param1 : Instance status
-getInstanceIDs() {
-    erdpy --verbose contract query ${ADDRESS} --function="getInstanceIDs" --arguments $1 --proxy=${PROXY} 
+getIDs() {
+    erdpy --verbose contract query ${ADDRESS} --function="getIDs" --arguments $1 --proxy=${PROXY} 
 }
 
-#INSTANCE_SPONSOR="erd1u4kn0mdpnn2geg9fhn7cd0w6m4s7677axy0f6ptw8xz2d4kxyp0sgynsls"
-#getSponsorInstances() {
-#    erdpy --verbose contract query ${ADDRESS} --function="getSponsorInstances" --arguments $INSTANCE_SPONSOR --proxy=${PROXY} 
-#}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-######################################################################
-# OBSOLETE
-######################################################################
-
-cancel() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="cancel" --send --proxy=${PROXY} --chain=${CHAIN}
+# Param1 : Sponsor address in HEX format (not string2hex but Bech32 to hex => http://207.244.241.38/elrond-converters/#bech32-to-hex ; advise: use AddressValue class in erdjs)
+getSponsorIDs() {
+    # Example : "0xe56d37eda19cd48ca0a9bcfd86bddadd61ed7bdd311e9d056e3984a6d6c6205f" to pass bech32 address erd1u4kn0mdpnn2geg9fhn7cd0w6m4s7677axy0f6ptw8xz2d4kxyp0sgynsls
+    erdpy --verbose contract query ${ADDRESS} --function="getSponsorIDs" --arguments $1 --proxy=${PROXY} 
 }
 
-buy_ticket() {
-    #read -p "wallet: " WALLET
-    read -p "price: " PRICE
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER}  --gas-limit=50000000 --function="buy_ticket" --value=${PRICE} --send --proxy=${PROXY} --chain=${CHAIN}
+# Param1 : Instance ID
+# Param2 : Player address in HEX format (not string2hex but Bech32 to hex => http://207.244.241.38/elrond-converters/#bech32-to-hex ; advise: use AddressValue class in erdjs)
+hasPlayed() {
+    # Example : "0xe56d37eda19cd48ca0a9bcfd86bddadd61ed7bdd311e9d056e3984a6d6c6205f" to pass bech32 address erd1u4kn0mdpnn2geg9fhn7cd0w6m4s7677axy0f6ptw8xz2d4kxyp0sgynsls
+    erdpy --verbose contract query ${ADDRESS} --function="hasPlayed" --arguments $1 $2 --proxy=${PROXY} 
 }
 
-
-test() {
-    erdpy --verbose contract call ${ADDRESS} --r	ecall-nonce --pem=${OWNER} --gas-limit=500000000 --function="test" --arguments "3" --send --proxy=${PROXY} --chain=${CHAIN}
+# Param1 : Instance ID
+# Param2 : Player address in HEX format (not string2hex but Bech32 to hex => http://207.244.241.38/elrond-converters/#bech32-to-hex ; advise: use AddressValue class in erdjs)
+hasWon() {
+    # Example : "0xe56d37eda19cd48ca0a9bcfd86bddadd61ed7bdd311e9d056e3984a6d6c6205f" to pass bech32 address erd1u4kn0mdpnn2geg9fhn7cd0w6m4s7677axy0f6ptw8xz2d4kxyp0sgynsls
+    erdpy --verbose contract query ${ADDRESS} --function="hasWon" --arguments $1 $2 --proxy=${PROXY} 
 }
-
-test2() {
-    erdpy --verbose contract query ${ADDRESS} --function="test2" --arguments "3" --proxy=${PROXY} 
-}
-
-test3() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=500000000 --function="test3" --arguments "7" --send --proxy=${PROXY} --chain=${CHAIN}
-}
-
-
-test4() {
-    erdpy --verbose contract query ${ADDRESS} --function="test4" --arguments "3" --proxy=${PROXY} 
-}
-
-status() {
-    erdpy --verbose contract query ${ADDRESS} --function="status" --proxy=${PROXY} 
-}
-
-lotoInfo() {
-    erdpy --verbose contract query ${ADDRESS} --function="lotoInfo" --proxy=${PROXY} 
-}
-
-
-

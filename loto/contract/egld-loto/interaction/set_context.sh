@@ -1,7 +1,52 @@
 #!/bin/bash
 
-for i in `seq 1 5`;
-do
-    source ./interaction/devnet.snippets.sh; createInstance
-    sleep 5
-done
+# Wallets 
+source ./interaction/devnet.wallets.sh
+
+#Create 4 instances
+source ./interaction/devnet.snippets.sh; create 60 $SPONSOR1
+sleep 5
+
+source ./interaction/devnet.snippets.sh; create 60 $SPONSOR2
+sleep 5
+
+source ./interaction/devnet.snippets.sh; create 60 $SPONSOR3
+sleep 5
+
+# 24h
+source ./interaction/devnet.snippets.sh; create 86400 $SPONSOR4
+sleep 5
+
+
+#Play
+
+#Instance 1 => 2 players
+source ./interaction/devnet.snippets.sh; play "1" $PLAYER1
+sleep 5
+source ./interaction/devnet.snippets.sh; play "1" $PLAYER2
+sleep 5
+
+#Instance 2 => 3 players
+source ./interaction/devnet.snippets.sh; play "2" $PLAYER1
+sleep 5
+source ./interaction/devnet.snippets.sh; play "2" $PLAYER2
+sleep 5
+source ./interaction/devnet.snippets.sh; play "2" $PLAYER3
+sleep 5
+
+#Instance 3 => 6 players
+source ./interaction/devnet.snippets.sh; play "3" $PLAYER1
+sleep 5
+source ./interaction/devnet.snippets.sh; play "3" $PLAYER2
+sleep 5
+source ./interaction/devnet.snippets.sh; play "3" $PLAYER3
+sleep 5
+source ./interaction/devnet.snippets.sh; play "3" $PLAYER4
+sleep 5
+source ./interaction/devnet.snippets.sh; play "3" $PLAYER5
+sleep 5
+source ./interaction/devnet.snippets.sh; play "3" $PLAYER6
+sleep 5
+
+#Instance 4 => 0 player
+

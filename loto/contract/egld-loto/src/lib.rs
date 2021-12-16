@@ -20,6 +20,7 @@ pub trait Loto {
 	
 	#[init]
 	fn init(&self) -> SCResult<()> {
+		self.iid_counter_mapper().set_if_empty(&0u32);
 		Ok(())
 	}
 
@@ -27,7 +28,7 @@ pub trait Loto {
 	// Administrator API
 	/////////////////////////////////////////////////////////////////////
 
-	#[endpoint(triggerEndedInstances)]
+	#[endpoint(triggerEnded)]
 	fn trigger_ended_instances(&self) -> SCResult<()> {
 		only_owner!(self, "Caller address not allowed");
 		let ended_instances: Vec<u32> = self.get_instance_ids(InstanceStatus::Ended);
@@ -39,7 +40,7 @@ pub trait Loto {
 		Ok(())
 	}
 
-	#[endpoint(cleanClaimedInstances)]
+	#[endpoint(cleanClaimed)]
 	fn clean_claimed_instances(&self) -> SCResult<()> {
 		only_owner!(self, "Caller address not allowed");
 		let claimed_instances: Vec<u32> = self.get_instance_ids(InstanceStatus::Claimed);
@@ -57,20 +58,20 @@ pub trait Loto {
 	// DApp endpoints : sponsor API
 	/////////////////////////////////////////////////////////////////////
 	#[payable("EGLD")]
-	#[endpoint(createInstance)]
+	#[endpoint(create)]
 	fn create_instance(&self, 
 		#[payment] egld_amount: BigUint, 
 		duration_in_s: u64, 
 		pseudo: ManagedBuffer, 
 		url: ManagedBuffer, 
 		picture_link: ManagedBuffer, 
-		free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, u32>  {
+		free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>>  {
 		
 		let result;
 		
 		// Check validity of parameters 
 		if duration_in_s == 0 {
-			result=MultiArg2((sc_error!("duration cannot be null"),0));
+			result=MultiArg2((sc_error!("duration cannot be null"), OptionalResult::None));
 			return result;
 		}
 
@@ -103,7 +104,7 @@ pub trait Loto {
 		self.iid_counter_mapper().set(&new_iid);
 
 		// Format result
-		result=MultiArg2((Ok(()),new_iid));
+		result=MultiArg2((Ok(()),OptionalResult::Some(new_iid)));
 		return result;
 	}
 
@@ -189,12 +190,12 @@ pub trait Loto {
 	// DApp view API
 	/////////////////////////////////////////////////////////////////////
 
-	#[view(getNbInstances)]
+	#[view(getNb)]
 	fn get_nb_instances(&self) -> u32 {
 		return self.instance_info_mapper().len() as u32;
 	}
 
-	#[view(getInstanceStatus)]
+	#[view(getStatus)]
 	fn get_instance_status(&self, iid: u32) -> InstanceStatus {
 		// Retrieve instance information
 		let mapper_value = self.instance_info_mapper().get(&iid);
@@ -223,7 +224,7 @@ pub trait Loto {
 		}
 	}
 
-	#[view(getInstanceInfo)]
+	#[view(getInfo)]
 	fn get_instance_info(&self, iid: u32) -> MultiResult4<
 		SCResult<()>, 
 		OptionalResult<InstanceInfo<Self::Api>>, 
@@ -239,7 +240,7 @@ pub trait Loto {
 				result=MultiArg4((sc_error!("Instance does not exists"), OptionalArg::None, OptionalArg::None, OptionalArg::None));
 			},
 			Some(instance_info) => {
-				// Instance found
+				// Instance found : return info, status and number of players
 				result=MultiArg4((Ok(()), OptionalArg::Some(instance_info), OptionalArg::Some(self.get_instance_status(iid)), OptionalArg::Some(self.instance_players_set_mapper(iid).len())));
 			},
 		}
@@ -256,7 +257,7 @@ pub trait Loto {
 			None => {
 				// Instance does not exist
 				result=MultiArg2((sc_error!("Instance does not exists"), OptionalResult::None));
-		},
+			},
 			Some(instance_info) => {
 				let current_date_time = self.blockchain().get_block_timestamp();
 				let mut remaing_time: u64 = 0;
@@ -273,13 +274,13 @@ pub trait Loto {
 	}
 
 
-	#[view(isInstanceWithStatus)]
+	#[view(hasStatus)]
 	fn is_instance_with_status(&self, instance_status: InstanceStatus) -> bool {
 		let instances: Vec<u32> = self.get_instance_ids(instance_status);
 		return instances.len() != 0;
 	}
 
-	#[view(getInstanceIDs)]
+	#[view(getIDs)]
 	fn get_instance_ids(&self, instance_status: InstanceStatus) -> Vec<u32> {
 		let mut instance_ids = Vec::new();
 
@@ -293,27 +294,50 @@ pub trait Loto {
 		return instance_ids;
 	}
 
-	// //TODO : does not work !!!
-	// #[view(getSponsorInstances)]
-	// fn get_sponsor_instances(&self, address: Address) -> Vec<u32>  {
-	// 	// TODO : quid apres appel de cleanClaimedInstances ?
-	// 	let highest_iid = self.get_iid_cpt();
-	// 	let mut sponsor_instances = Vec::new();
+	#[view(getSponsorIDs)]
+	fn get_sponsor_instances(&self, sponsor_address: ManagedAddress) -> Vec<u32> {
+		let mut sponsor_iids = Vec::new();
 
-	// 	for i in 1..=highest_iid {
-	// 		// Retrieve instance information
-	// 		let instance_info = self.get_instance_info(i);
+		// Return all instances IDs with sponsor address matching the one provided in parameter
+		for instance in self.instance_info_mapper().iter() {
+			if instance.1.sponsor_address.clone() == sponsor_address {
+				sponsor_iids.push(instance.0);
+			}
+		}
 
-	// 		if instance_info.sponsor_address == address {
-	// 			sponsor_instances.push(i);
-	// 		}
-	// 	}
+		return sponsor_iids;
+	}
 
-	// 	return sponsor_instances;
-	// }
+	#[view(hasPlayed)]
+	fn has_played(&self, iid: u32, player_address: ManagedAddress) -> bool {
+
+		// Return true is player_address provided in parameter is part of the SetMapper for the specified instance ID
+		return self.instance_players_set_mapper(iid).contains(&player_address);
+	}
+
+	#[view(hasWon)]
+	fn has_won(&self, iid: u32, player_address: ManagedAddress) -> MultiResult2<SCResult<()>, OptionalResult<bool>>  {
+
+		// Retrieve instance information
+		match self.instance_info_mapper().get(&iid) {
+
+			None => {
+				// Instance does not exist
+				return MultiArg2((sc_error!("Instance does not exists"), OptionalResult::None));
+			},
+			Some(instance_info) => {
+				// Return true is player_address provided in parameter is the winner address for the specified instance ID
+				if instance_info.winner_address == player_address {
+					return MultiArg2((Ok(()), OptionalResult::Some(true)));
+				}
+			},
+		}
+
+		return MultiArg2((Ok(()), OptionalResult::Some(false)));
+	}	
 
 	/////////////////////////////////////////////////////////////////////
-	// Local functions
+	// Mappers
 	/////////////////////////////////////////////////////////////////////
 
 	// Instance counter
