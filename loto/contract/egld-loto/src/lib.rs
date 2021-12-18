@@ -308,6 +308,21 @@ pub trait Loto {
 		return sponsor_iids;
 	}
 
+	#[view(getPlayerIDs)]
+	fn get_player_instances(&self, player_address: ManagedAddress) -> Vec<u32> {
+		let mut player_iids = Vec::new();
+
+		// Return all instances IDs to which player address provided in parameter has played
+		for iid in self.instance_info_mapper().keys() {
+			if self.has_played(iid, player_address.clone()) == true {
+				player_iids.push(iid.clone());
+			}
+		}
+
+		return player_iids;
+	}
+
+
 	#[view(hasPlayed)]
 	fn has_played(&self, iid: u32, player_address: ManagedAddress) -> bool {
 

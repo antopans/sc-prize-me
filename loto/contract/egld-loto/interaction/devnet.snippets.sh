@@ -116,6 +116,12 @@ getSponsorIDs() {
     erdpy --verbose contract query ${ADDRESS} --function="getSponsorIDs" --arguments $1 --proxy=${PROXY} 
 }
 
+# Param1 : Player address in HEX format (not string2hex but Bech32 to hex => http://207.244.241.38/elrond-converters/#bech32-to-hex ; advise: use AddressValue class in erdjs)
+getPlayerIDs() {
+    # Example : "0xe56d37eda19cd48ca0a9bcfd86bddadd61ed7bdd311e9d056e3984a6d6c6205f" to pass bech32 address erd1u4kn0mdpnn2geg9fhn7cd0w6m4s7677axy0f6ptw8xz2d4kxyp0sgynsls
+    erdpy --verbose contract query ${ADDRESS} --function="getPlayerIDs" --arguments $1 --proxy=${PROXY} 
+}
+
 # Param1 : Instance ID
 # Param2 : Player address in HEX format (not string2hex but Bech32 to hex => http://207.244.241.38/elrond-converters/#bech32-to-hex ; advise: use AddressValue class in erdjs)
 hasPlayed() {
