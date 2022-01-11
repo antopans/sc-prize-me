@@ -1,0 +1,11 @@
+ELROND
+-------------------------------------------------------------
+https://devnet-explorer.elrond.com/
+https://devnet-wallet.elrond.com/unlock/keystore
+https://docs.elrond.com/developers/tutorials/your-first-dapp/
+https://api.elrond.com/
+https://docs.rs/elrond-wasm/latest/elrond_wasm/
+https://hackmd.io/@wollum/Bko-Zky1v
+https://github.com/ElrondNetwork/elrond-wasm-rs/blob/v0.25.0/contracts/examples/lottery-esdt/src/lottery.rs
+http://207.244.241.38/elrond-converters/#string-to-hexadecimal
+
