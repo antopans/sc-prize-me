@@ -1,11 +1,11 @@
 [package]
-name = "egld-loto-meta"
+name = "lottery-meta"
 version = "0.0.0"
 authors = ["You"]
 edition = "2018"
 publish = false
 
-[dependencies.egld-loto]
+[dependencies.lottery]
 path = ".."
 
 [dependencies.elrond-wasm]

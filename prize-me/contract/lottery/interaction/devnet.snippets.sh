@@ -1,5 +1,5 @@
 #!/bin/bash
-BYTECODE="output/egld-loto.wasm"
+BYTECODE="output/lottery.wasm"
 ADDRESS=$(erdpy data load --key=address-devnet)
 DEPLOY_TRANSACTION=$(erdpy data load --key=deployTransaction-devnet)
 PROXY=https://devnet-api.elrond.com

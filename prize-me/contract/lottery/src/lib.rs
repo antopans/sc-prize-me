@@ -12,7 +12,7 @@ use instance_status::InstanceStatus;
 use random::Random;
 
 #[elrond_wasm::contract]
-pub trait Loto {
+pub trait Lottery {
 
 	/////////////////////////////////////////////////////////////////////
 	// SC Management API
