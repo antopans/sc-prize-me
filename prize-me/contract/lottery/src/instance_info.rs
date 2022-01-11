@@ -3,6 +3,7 @@ use elrond_wasm::api::ManagedTypeApi;
 use elrond_wasm::types::BigUint;
 use elrond_wasm::types::ManagedAddress;
 use elrond_wasm::types::ManagedBuffer;
+use elrond_wasm::types::TokenIdentifier;
 
 elrond_wasm::derive_imports!();
 
@@ -17,7 +18,8 @@ pub struct SponsorInfo <M: ManagedTypeApi> {
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct InstanceInfo <M: ManagedTypeApi> {
 	pub sponsor_address: ManagedAddress<M>,
-	pub prize: BigUint<M>,
+	pub token_identifier: TokenIdentifier<M>,
+	pub token_amount: BigUint<M>,
 	pub sponsor_info: SponsorInfo<M>,
 	pub deadline: u64,
 	pub winner_address: ManagedAddress<M>,

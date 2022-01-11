@@ -57,10 +57,11 @@ pub trait Lottery {
 	/////////////////////////////////////////////////////////////////////
 	// DApp endpoints : sponsor API
 	/////////////////////////////////////////////////////////////////////
-	#[payable("EGLD")]
+	#[payable("*")]
 	#[endpoint(create)]
 	fn create_instance(&self, 
-		#[payment] egld_amount: BigUint, 
+		#[payment_token] token_identifier: TokenIdentifier,
+		#[payment] token_amount: BigUint, 
 		duration_in_s: u64, 
 		pseudo: ManagedBuffer, 
 		url: ManagedBuffer, 
@@ -92,7 +93,8 @@ pub trait Lottery {
 		// Fill instance information
 		let instance_info = InstanceInfo {
 			sponsor_address: self.blockchain().get_caller(),
-			prize: egld_amount,
+			token_identifier: token_identifier,
+			token_amount: token_amount,
 			sponsor_info: sponsor_info,
 			deadline: deadline,
 			winner_address: ManagedAddress::zero(),
@@ -174,7 +176,7 @@ pub trait Lottery {
 				}
 
 				// Send prize to winner address
-				self.send().direct_egld(&instance_info.winner_address, &instance_info.prize, b"Prize claimed");
+				self.send().direct(&instance_info.winner_address, &instance_info.token_identifier, 0, &instance_info.token_amount, b"Prize claimed");
 
 				// Update claimed status
 				let mut updated_instance_info = instance_info;
