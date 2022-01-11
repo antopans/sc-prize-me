@@ -1,0 +1,24 @@
+{
+	"name": "deploy lottery sc",
+	"steps": [
+        {
+			"step": "scDeploy",
+			"txId": "deploy-sc-lottery",
+			"tx": {
+				"from": "address:owner",
+				"value": "0",
+				"contractCode": "file:../../output/lottery.wasm",
+				"arguments": [
+				],
+				"gasLimit": "100,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [],
+				"status": "",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}
