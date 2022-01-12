@@ -24,3 +24,6 @@ optional = true
 
 [dev-dependencies.elrond-wasm-debug]
 version = "0.25.0"
+
+[dependencies]
+variant_count = "1.1"

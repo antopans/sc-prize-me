@@ -30,7 +30,8 @@ pub trait Lottery {
     #[endpoint(triggerEnded)]
     fn trigger_ended_instances(&self) -> SCResult<()> {
         only_owner!(self, "Caller address not allowed");
-        let ended_instances: Vec<u32> = self.get_instance_ids(InstanceStatus::Ended);
+
+        let ended_instances: Vec<u32> = self.get_instance_ids(MultiArgVec(Vec::from([InstanceStatus::Ended])));
 
         for iid in ended_instances.iter() {
             self.trigger(iid.clone());
@@ -42,7 +43,8 @@ pub trait Lottery {
     #[endpoint(cleanClaimed)]
     fn clean_claimed_instances(&self) -> SCResult<()> {
         only_owner!(self, "Caller address not allowed");
-        let claimed_instances: Vec<u32> = self.get_instance_ids(InstanceStatus::Claimed);
+        
+        let claimed_instances: Vec<u32> = self.get_instance_ids(MultiArgVec(Vec::from([InstanceStatus::Claimed])));
 
         for iid in claimed_instances.iter() {
             self.instance_players_set_mapper(iid.clone()).clear();
@@ -317,18 +319,28 @@ pub trait Lottery {
 
     #[view(hasStatus)]
     fn is_instance_with_status(&self, instance_status: InstanceStatus) -> bool {
-        let instances: Vec<u32> = self.get_instance_ids(instance_status);
+        let instances: Vec<u32> = self.get_instance_ids(MultiArgVec(Vec::from([instance_status])));
         return instances.len() != 0;
     }
 
     #[view(getIDs)]
-    fn get_instance_ids(&self, instance_status: InstanceStatus) -> Vec<u32> {
-        let mut instance_ids = Vec::new();
+    fn get_instance_ids(&self, #[var_args] instances_status: VarArgs<InstanceStatus>) -> Vec<u32> {
 
-        // Return all instances IDs which meet the status filter provided in parameter
-        for iid in self.instance_info_mapper().keys() {
-            if self.get_instance_status(iid) == instance_status {
-                instance_ids.push(iid.clone());
+        let mut instance_ids = Vec::new();
+        let mut instances_status_vec = instances_status.clone().into_vec();
+
+        // Remove duplicates
+        instances_status_vec.sort();
+        instances_status_vec.dedup();
+
+        if instances_status.len() >= 1 && instances_status.len() <= InstanceStatus::VARIANT_COUNT {
+            // Return all instances IDs which meet the status filter provided in parameter
+            for iid in self.instance_info_mapper().keys() {
+                for status in instances_status_vec.iter() {
+                    if self.get_instance_status(iid) == status.clone() {
+                        instance_ids.push(iid.clone());
+                    }   
+                }
             }
         }
 

@@ -105,9 +105,9 @@ hasStatus() {
     erdpy --verbose contract query ${ADDRESS} --function="hasStatus" --arguments $1 --proxy=${PROXY} 
 }
 
-# Param1 : Instance status
+# Var params : Instance status
 getIDs() {
-    erdpy --verbose contract query ${ADDRESS} --function="getIDs" --arguments $1 --proxy=${PROXY} 
+    erdpy --verbose contract query ${ADDRESS} --function="getIDs" --arguments $* --proxy=${PROXY} 
 }
 
 # Param1 : Sponsor address in HEX format (not string2hex but Bech32 to hex => http://207.244.241.38/elrond-converters/#bech32-to-hex ; advise: use AddressValue class in erdjs)
