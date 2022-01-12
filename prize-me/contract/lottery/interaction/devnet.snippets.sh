@@ -105,7 +105,7 @@ hasStatus() {
     erdpy --verbose contract query ${ADDRESS} --function="hasStatus" --arguments $1 --proxy=${PROXY} 
 }
 
-# Var params : Instance status
+# Var params : Instance status filter (from 1 to 5 status can be provided)
 getIDs() {
     erdpy --verbose contract query ${ADDRESS} --function="getIDs" --arguments $* --proxy=${PROXY} 
 }

@@ -324,19 +324,21 @@ pub trait Lottery {
     }
 
     #[view(getIDs)]
-    fn get_instance_ids(&self, #[var_args] instances_status: VarArgs<InstanceStatus>) -> Vec<u32> {
+    fn get_instance_ids(&self, #[var_args] status_filter: VarArgs<InstanceStatus>) -> Vec<u32> {
 
         let mut instance_ids = Vec::new();
-        let mut instances_status_vec = instances_status.clone().into_vec();
+        let mut status_filter_vec = status_filter.clone().into_vec();
 
-        // Remove duplicates
-        instances_status_vec.sort();
-        instances_status_vec.dedup();
+        // Ensure at least one status is provided as filter, check also overflow regarding the maximum possible values for status
+        if status_filter.len() >= 1 && status_filter.len() <= InstanceStatus::VARIANT_COUNT {
 
-        if instances_status.len() >= 1 && instances_status.len() <= InstanceStatus::VARIANT_COUNT {
+            // Remove duplicates
+            status_filter_vec.sort();
+            status_filter_vec.dedup();
+
             // Return all instances IDs which meet the status filter provided in parameter
             for iid in self.instance_info_mapper().keys() {
-                for status in instances_status_vec.iter() {
+                for status in status_filter_vec.iter() {
                     if self.get_instance_status(iid) == status.clone() {
                         instance_ids.push(iid.clone());
                     }   
