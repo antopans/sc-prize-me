@@ -40,6 +40,15 @@ cleanClaimed() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="cleanClaimed" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
+# Param1 : fees amount
+setFees() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setFees" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
+claimFees() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="claimFees" --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
 ######################################################################
 # DApp endpoints : sponsor API
 ######################################################################
@@ -67,19 +76,24 @@ trigger() {
 
 # Param1 : Instance ID
 # Param2 : pem wallet
+# Param3 : fees : #1000000000000000 => 0.001 EGLD
 play() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=50000000 --function="play" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=50000000 --function="play" --value=$3 --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # Param1 : Instance ID
 # Param2 : pem wallet
-claim() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=50000000 --function="claim" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
+claimPrize() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=50000000 --function="claimPrize" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 ######################################################################
 # DApp view API
 ######################################################################
+
+ getFees() {
+    erdpy --verbose contract query ${ADDRESS} --function="getFees" --proxy=${PROXY} 
+}
 
  getNb() {
     erdpy --verbose contract query ${ADDRESS} --function="getNb" --proxy=${PROXY} 

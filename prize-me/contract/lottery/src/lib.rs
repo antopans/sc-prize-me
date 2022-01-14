@@ -11,6 +11,7 @@ use instance_info::SponsorInfo;
 use instance_status::InstanceStatus;
 use random::Random;
 
+
 #[elrond_wasm::contract]
 pub trait Lottery {
     /////////////////////////////////////////////////////////////////////
@@ -19,7 +20,12 @@ pub trait Lottery {
 
     #[init]
     fn init(&self) -> SCResult<()> {
+        
+        // Initializations @ deployment only 
         self.iid_counter_mapper().set_if_empty(&0u32);
+        self.fees_pool_mapper().set_if_empty(&BigUint::zero());
+        self.fees2apply_mapper().set_if_empty(&BigUint::zero()); // Fees = 0 EGLD @ SC deployment
+
         Ok(())
     }
 
@@ -51,6 +57,28 @@ pub trait Lottery {
             self.instance_players_vec_mapper(iid.clone()).clear();
             self.instance_info_mapper().remove(&iid);
         }
+
+        Ok(())
+    }
+
+    #[endpoint(setFees)]
+    fn set_fees(&self, fees_amount: BigUint) -> SCResult<()> {
+        only_owner!(self, "Caller address not allowed");
+
+        // Set fees in EGLD
+        self.fees2apply_mapper().set(&fees_amount); 
+
+        Ok(())
+    }
+
+    #[endpoint(claimFees)]
+    fn claim_fees(&self) -> SCResult<()> {
+        only_owner!(self, "Caller address not allowed");
+        require!(self.fees_pool_mapper().get() != BigUint::zero(), "No fees to claim");
+        
+        // Claim fees and clear the pool
+        self.send().direct_egld(&self.blockchain().get_owner_address(), &self.fees_pool_mapper().get(), b"Fees from pool claimed");
+        self.fees_pool_mapper().clear();
 
         Ok(())
     }
@@ -151,17 +179,20 @@ pub trait Lottery {
     /////////////////////////////////////////////////////////////////////
     // DApp endpoints : player API
     /////////////////////////////////////////////////////////////////////
+    #[payable("EGLD")]
     #[endpoint(play)]
-    fn play(&self, iid: u32) -> SCResult<()> {
+    fn play(&self, #[payment] fees: BigUint, iid: u32) -> SCResult<()> {
+
+        // Checks
         let caller = self.blockchain().get_caller();
-        require!(
-            self.get_instance_status(iid) == InstanceStatus::Running,
-            "Instance is not active"
-        );
-        require!(
-            self.instance_players_set_mapper(iid).contains(&caller) == false,
-            "Player has already played"
-        );
+        require!(self.get_instance_status(iid) == InstanceStatus::Running, "Instance is not active");
+        require!(self.instance_players_set_mapper(iid).contains(&caller) == false, "Player has already played");
+        require!(fees == self.fees2apply_mapper().get(), "Wrong fees amount");
+
+        // Add fees to the pool
+        if fees != BigUint::zero() {
+            self.fees_pool_mapper().update(|total_fees| *total_fees += fees);
+        }
 
         // Add caller address to participants for this instance
         self.instance_players_set_mapper(iid).insert(caller.clone());
@@ -170,8 +201,8 @@ pub trait Lottery {
         Ok(())
     }
 
-    #[endpoint(claim)]
-    fn claim(&self, iid: u32) -> SCResult<()> {
+    #[endpoint(claimPrize)]
+    fn claim_prize(&self, iid: u32) -> SCResult<()> {
         require!(
             self.get_instance_status(iid) == InstanceStatus::Triggered,
             "Instance is not in the good state"
@@ -209,6 +240,13 @@ pub trait Lottery {
     /////////////////////////////////////////////////////////////////////
     // DApp view API
     /////////////////////////////////////////////////////////////////////
+
+    #[view(getFees)]
+    fn get_fees(&self) -> BigUint {
+               
+        // Get fees in EGLD
+        return self.fees2apply_mapper().get(); 
+    }
 
     #[view(getNb)]
     fn get_nb_instances(&self) -> u32 {
@@ -390,6 +428,12 @@ pub trait Lottery {
     /////////////////////////////////////////////////////////////////////
     // Mappers
     /////////////////////////////////////////////////////////////////////
+
+    // Fees
+    #[storage_mapper("fees2apply")]
+    fn fees2apply_mapper(&self) -> SingleValueMapper<BigUint>;
+    #[storage_mapper("fees_pool")]
+    fn fees_pool_mapper(&self) -> SingleValueMapper<BigUint>;
 
     // Instance counter
     #[storage_mapper("iid_counter")]
