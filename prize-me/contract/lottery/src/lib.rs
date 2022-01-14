@@ -60,16 +60,7 @@ pub trait Lottery {
     /////////////////////////////////////////////////////////////////////
     #[payable("*")]
     #[endpoint(create)]
-    fn create_instance(
-        &self,
-        #[payment_token] token_identifier: TokenIdentifier,
-        #[payment] token_amount: BigUint,
-        duration_in_s: u64,
-        pseudo: ManagedBuffer,
-        url: ManagedBuffer,
-        picture_link: ManagedBuffer,
-        free_text: ManagedBuffer,
-    ) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
+    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url: ManagedBuffer, picture_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
         let result;
 
         // Check validity of parameters
@@ -251,15 +242,7 @@ pub trait Lottery {
     }
 
     #[view(getInfo)]
-    fn get_instance_info(
-        &self,
-        iid: u32,
-    ) -> MultiResult4<
-        SCResult<()>,
-        OptionalResult<InstanceInfo<Self::Api>>,
-        OptionalResult<InstanceStatus>,
-        OptionalResult<usize>,
-    > {
+    fn get_instance_info(&self, iid: u32) -> MultiResult4<SCResult<()>, OptionalResult<InstanceInfo<Self::Api>>, OptionalResult<InstanceStatus>, OptionalResult<usize>> {
         let result: MultiArg4<
             SCResult<()>,
             OptionalResult<InstanceInfo<Self::Api>>,
@@ -386,11 +369,7 @@ pub trait Lottery {
     }
 
     #[view(hasWon)]
-    fn has_won(
-        &self,
-        iid: u32,
-        player_address: ManagedAddress,
-    ) -> MultiResult2<SCResult<()>, OptionalResult<bool>> {
+    fn has_won(&self, iid: u32, player_address: ManagedAddress) -> MultiResult2<SCResult<()>, OptionalResult<bool>> {
         // Retrieve instance information
         match self.instance_info_mapper().get(&iid) {
             None => {
