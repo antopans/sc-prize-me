@@ -57,6 +57,10 @@ claimFees() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="claimFees" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
+ getFeesPool() {
+    erdpy --verbose contract query ${ADDRESS} --function="getFeesPool" --proxy=${PROXY} 
+}
+
 ######################################################################
 # DApp endpoints : sponsor API
 ######################################################################

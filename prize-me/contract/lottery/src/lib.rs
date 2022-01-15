@@ -122,12 +122,21 @@ pub trait Lottery {
         Ok(())
     }
 
+    #[view(getFeesPool)]
+    fn get_fees_pool(&self) -> BigUint {
+               
+        // Get the current amount of fees in the pool
+        return self.fees_pool_mapper().get(); 
+    }
+
     /////////////////////////////////////////////////////////////////////
     // DApp endpoints : sponsor API
     /////////////////////////////////////////////////////////////////////
     #[payable("*")]
     #[endpoint(create)]
-    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url: ManagedBuffer, picture_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
+    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url: ManagedBuffer, picture_link: ManagedBuffer, free_text: ManagedBuffer) 
+    -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
+        
         let result;
 
         // Check validity of parameters
