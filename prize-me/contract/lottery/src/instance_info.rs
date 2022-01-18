@@ -15,15 +15,20 @@ pub struct SponsorInfo<M: ManagedTypeApi> {
 }
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
-pub struct InstanceInfo<M: ManagedTypeApi> {
-    pub sponsor_address: ManagedAddress<M>,
+pub struct PrizeInfo<M: ManagedTypeApi> {
     pub token_identifier: TokenIdentifier<M>,
     pub token_nonce: u64,
     pub token_amount: BigUint<M>,
+}
+
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
+pub struct InstanceInfo<M: ManagedTypeApi> {
+    pub sponsor_address: ManagedAddress<M>,
     pub sponsor_info: SponsorInfo<M>,
+    pub prize_info: PrizeInfo<M>,
     pub deadline: u64,
-    pub winner_address: ManagedAddress<M>,
     pub claimed_status: bool,
+    pub winner_address: ManagedAddress<M>,
 }
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]

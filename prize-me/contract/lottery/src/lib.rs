@@ -8,6 +8,7 @@ mod random;
 
 use instance_info::InstanceInfoTmp;
 use instance_info::InstanceInfo;
+use instance_info::PrizeInfo;
 use instance_info::SponsorInfo;
 use instance_status::InstanceStatus;
 use random::Random;
@@ -42,7 +43,7 @@ pub trait Lottery {
             }
             Some(instance_info) => {
                 // Instance found : return info
-                instance_info_tmp.token_amount = instance_info.token_amount;
+                instance_info_tmp.token_amount = instance_info.prize_info.token_amount;
                 instance_info_tmp.sponsor_info.pseudo = instance_info.sponsor_info.pseudo;
                 instance_info_tmp.sponsor_info.url = instance_info.sponsor_info.url;
                 instance_info_tmp.sponsor_info.picture_link = instance_info.sponsor_info.picture_link;
@@ -134,7 +135,7 @@ pub trait Lottery {
     /////////////////////////////////////////////////////////////////////
     #[payable("*")]
     #[endpoint(create)]
-    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url: ManagedBuffer, picture_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
+    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url: ManagedBuffer, picture_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
         
         let result;
 
@@ -158,16 +159,21 @@ pub trait Lottery {
             free_text: free_text,
         };
 
+        // Fill prize information
+        let prize_info = PrizeInfo {
+            token_identifier: token_identifier,
+            token_nonce: token_nonce,
+            token_amount: token_amount,
+        };
+
         // Fill instance information
         let instance_info = InstanceInfo {
             sponsor_address: self.blockchain().get_caller(),
-            token_identifier: token_identifier,
-            token_nonce: self.raw_vm_api().esdt_token_nonce(),
-            token_amount: token_amount,
             sponsor_info: sponsor_info,
+            prize_info: prize_info,
             deadline: deadline,
-            winner_address: ManagedAddress::zero(),
             claimed_status: false,
+            winner_address: ManagedAddress::zero(),
         };
 
         // Record new instance
@@ -268,9 +274,9 @@ pub trait Lottery {
                 // Send prize to winner address
                 self.send().direct(
                     &instance_info.winner_address,
-                    &instance_info.token_identifier,
-                    instance_info.token_nonce,
-                    &instance_info.token_amount,
+                    &instance_info.prize_info.token_identifier,
+                    instance_info.prize_info.token_nonce,
+                    &instance_info.prize_info.token_amount,
                     b"Prize claimed",
                 );
 
