@@ -1,0 +1,28 @@
+{
+	"name": "player1 claims esdt lottery",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "claim-esdt-lottery",
+			"comment": "Player1 claims ESDT lottery",
+			"tx": {
+				"from": "address:player1",
+				"to": "sc:lottery",
+				"egldValue": "0",
+				"function": "claimPrize",
+				"arguments": [
+					"2"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "0",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}

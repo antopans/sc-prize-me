@@ -6,21 +6,21 @@
 			"accounts": {
 				"address:owner": {
 					"nonce": "0",
-					"balance": "1,000,000,000,000,000,000,000,000,000,000",
+					"balance": "100,000,000,000,000,000,000",
 					"esdt": {
 					},
 					"storage": {}
 				},
                 "address:sponsorEGLD": {
 					"nonce": "0",
-					"balance": "1,000,000,000,000,000,000,000,000,000,000",
+					"balance": "100,000,000,000,000,000,000",
 					"esdt": {
 					},
 					"storage": {}
 				},
 				"address:sponsorESDT": {
 					"nonce": "0",
-					"balance": "1,000,000,000,000,000,000,000,000,000,000",
+					"balance": "100,000,000,000,000,000,000",
 					"esdt": {
 						"str:MEX-abcdef": "5,000,000,000",
 						"str:RIDE-abcdef": "5,000,000,000"
@@ -29,7 +29,7 @@
 				},
                 "address:sponsorNFT": {
 					"nonce": "0",
-					"balance": "1,000,000,000,000,000,000,000,000,000,000",
+					"balance": "100,000,000,000,000,000,000",
                     "esdt": {
                         "str:NFT-123456": {
                             "instances": [
@@ -46,42 +46,76 @@
                     },
 					"storage": {}
 				},
+                "address:sponsorSFT": {
+					"nonce": "0",
+					"balance": "100,000,000,000,000,000,000",
+                    "esdt": {
+                        "str:SFT-123456": {
+                            "instances": [
+                                {
+                                    "nonce": "1",
+                                    "balance": "10",
+                                    "creator": "sc:sft-minter",
+                                    "royalties": "0",
+                                    "uri": "",
+                                    "attributes": "u64:100,000"
+                                },
+								{
+                                    "nonce": "2",
+                                    "balance": "10",
+                                    "creator": "sc:sft-minter",
+                                    "royalties": "0",
+                                    "uri": "",
+                                    "attributes": "u64:100,000"
+                                }
+                            ]
+                        }
+                    },
+					"storage": {}
+				},
 				"address:player1": {
 					"nonce": "0",
-					"balance": "1,000,000,000,000,000,000,000,000,000,000",
+					"balance": "100,000,000,000,000,000,000",
 					"esdt": {
 					},
 					"storage": {}
 				},
                 "address:player2": {
 					"nonce": "0",
-					"balance": "1,000,000,000,000,000,000,000,000,000,000",
+					"balance": "100,000,000,000,000,000,000",
 					"esdt": {
 					},
 					"storage": {}
 				},
                 "address:player3": {
 					"nonce": "0",
-					"balance": "1,000,000,000,000,000,000,000,000,000,000",
+					"balance": "100,000,000,000,000,000,000",
 					"esdt": {
 					},
 					"storage": {}
 				},
                 "address:player4": {
 					"nonce": "0",
-					"balance": "1,000,000,000,000,000,000,000,000,000,000",
+					"balance": "100,000,000,000,000,000,000",
 					"esdt": {
 					},
 					"storage": {}
 				},
                 "address:player5": {
 					"nonce": "0",
-					"balance": "1,000,000,000,000,000,000,000,000,000,000",
+					"balance": "100,000,000,000,000,000,000",
 					"esdt": {
 					},
 					"storage": {}
 				}
+			},
+			"newAddresses": [
+			{
+				"creatorAddress": "address:owner",
+				"creatorNonce": "0",
+				"newAddress": "sc:lottery"
 			}
+			]
 		}
 	]
 }

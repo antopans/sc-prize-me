@@ -1,0 +1,28 @@
+{
+	"name": "player1 plays nft lottery",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "player1_play_nft_lottery",
+			"comment": "Player1 plays to NFT lottery",
+			"tx": {
+				"from": "address:player1",
+				"to": "sc:lottery",
+				"egldValue": "0",
+				"function": "play",
+				"arguments": [
+					"3"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "0",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}

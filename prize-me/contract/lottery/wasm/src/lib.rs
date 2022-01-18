@@ -8,11 +8,15 @@ elrond_wasm_node::wasm_endpoints! {
     lottery
     (
         init
-        claim
+        claimFees
+        claimPrize
         cleanClaimed
         create
+        getFees
+        getFeesPool
         getIDs
         getInfo
+        getInfoTmp
         getNb
         getPlayerIDs
         getRemainingTime
@@ -22,6 +26,7 @@ elrond_wasm_node::wasm_endpoints! {
         hasStatus
         hasWon
         play
+        setFees
         trigger
         triggerEnded
     )

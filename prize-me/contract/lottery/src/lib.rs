@@ -134,8 +134,7 @@ pub trait Lottery {
     /////////////////////////////////////////////////////////////////////
     #[payable("*")]
     #[endpoint(create)]
-    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url: ManagedBuffer, picture_link: ManagedBuffer, free_text: ManagedBuffer) 
-    -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
+    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url: ManagedBuffer, picture_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
         
         let result;
 
@@ -163,6 +162,7 @@ pub trait Lottery {
         let instance_info = InstanceInfo {
             sponsor_address: self.blockchain().get_caller(),
             token_identifier: token_identifier,
+            token_nonce: self.raw_vm_api().esdt_token_nonce(),
             token_amount: token_amount,
             sponsor_info: sponsor_info,
             deadline: deadline,
@@ -269,7 +269,7 @@ pub trait Lottery {
                 self.send().direct(
                     &instance_info.winner_address,
                     &instance_info.token_identifier,
-                    0,
+                    instance_info.token_nonce,
                     &instance_info.token_amount,
                     b"Prize claimed",
                 );

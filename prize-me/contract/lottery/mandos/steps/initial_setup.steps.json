@@ -3,11 +3,15 @@
 	"steps": [
 		{
 			"step": "externalSteps",
-			"path": "steps/init_accounts.steps.json"
+			"path": "init_accounts.steps.json"
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/deploy_contract.steps.json"
+			"path": "deploy_contract.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "create_lotteries.steps.json"
 		},
 		{
 			"step": "setState",

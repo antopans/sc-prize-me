@@ -18,6 +18,7 @@ pub struct SponsorInfo<M: ManagedTypeApi> {
 pub struct InstanceInfo<M: ManagedTypeApi> {
     pub sponsor_address: ManagedAddress<M>,
     pub token_identifier: TokenIdentifier<M>,
+    pub token_nonce: u64,
     pub token_amount: BigUint<M>,
     pub sponsor_info: SponsorInfo<M>,
     pub deadline: u64,

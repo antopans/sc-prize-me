@@ -1,0 +1,138 @@
+{
+	"name": "Create lotteries",
+	"comment" : "Create 1 lottery of each type (ESDT, NFT, EGLD, ...)",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "create-lottery-egld",
+			"comment": "create a lottery with EGLD prize",
+			"tx": {
+				"from": "address:sponsorEGLD",
+				"to": "sc:lottery",
+				"egldValue": "1,000,000,000,000,000,000",
+				"function": "create",
+				"arguments": [
+					"u64:60",
+					"str:pseudo-sponsorEGLD",
+					"str:https://website-sponsorEGLD.com",
+					"str:https://website-sponsorEGLD.com/logo.svg",
+					"str:Welcome to my EGLD lottery. Good luck !"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+					"1"
+				],
+				"status": "0",
+				"gas": "*",
+				"refund": "*"
+			}
+		},
+		{
+			"step": "scCall",
+			"txId": "create-lottery-esdt",
+			"comment": "create a lottery with ESDT prize",
+			"tx": {
+				"from": "address:sponsorESDT",
+				"to": "sc:lottery",
+				"egldValue": "0",
+				"esdtValue": [
+                    {
+                        "tokenIdentifier": "str:MEX-abcdef",
+                        "value": "1,000"
+                    }
+                ],
+				"function": "create",
+				"arguments": [
+					"u64:180",
+					"str:pseudo-sponsorESDT",
+					"str:https://website-sponsorESDT.com",
+					"str:https://website-sponsorESDT.com/logo.svg",
+					"str:Welcome to my ESDT lottery. Good luck !"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+					"2"
+				],
+				"status": "0",
+				"gas": "*",
+				"refund": "*"
+			}
+		},
+		{
+			"step": "scCall",
+			"txId": "create-lottery-nft",
+			"comment": "create a lottery with NFT prize",
+			"tx": {
+				"from": "address:sponsorNFT",
+				"to": "sc:lottery",
+				"egldValue": "0",
+				"esdtValue": [
+                    {
+                        "tokenIdentifier": "str:NFT-123456",
+						"nonce" : "1",
+                        "value": "1"
+                    }
+                ],
+				"function": "create",
+				"arguments": [
+					"u64:3600",
+					"str:pseudo-sponsorNFT",
+					"str:https://website-sponsorNFT.com",
+					"str:https://website-sponsorNFT.com/logo.svg",
+					"str:Welcome to my NFT lottery. Good luck !"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+					"3"
+				],
+				"status": "0",
+				"gas": "*",
+				"refund": "*"
+			}
+		},
+		{
+			"step": "scCall",
+			"txId": "create-lottery-sft",
+			"comment": "create a lottery with SFT prize",
+			"tx": {
+				"from": "address:sponsorSFT",
+				"to": "sc:lottery",
+				"egldValue": "0",
+				"esdtValue": [
+                    {
+                        "tokenIdentifier": "str:SFT-123456",
+						"nonce" : "2",
+                        "value": "5"
+                    }
+                ],
+				"function": "create",
+				"arguments": [
+					"u64:604800",
+					"str:pseudo-sponsorSFT",
+					"str:https://website-sponsorSFT.com",
+					"str:https://website-sponsorSFT.com/logo.svg",
+					"str:Welcome to my SFT lottery. Good luck !"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+					"4"
+				],
+				"status": "0",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}
