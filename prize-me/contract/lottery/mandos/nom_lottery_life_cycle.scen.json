@@ -1,0 +1,62 @@
+{
+	"name": "Lottery life cycle",
+	"comment": "Check the different states of a lottery : not existing, running, ended, triggered, claimed",
+	"steps": [
+		{
+			"step": "externalSteps",
+			"path": "steps/initial_setup.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getStatus/query_getStatus_[5]_[not_existing].steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getStatus/query_getStatus_[1]_[running].steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/time_management/egld_lottery_forward_mid_period.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getStatus/query_getStatus_[1]_[running].steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/player_actions/player1_plays_to_egld_lottery.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/time_management/egld_lottery_forward_before_end_period.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getStatus/query_getStatus_[1]_[running].steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/time_management/egld_lottery_forward_end_period.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getStatus/query_getStatus_[1]_[ended].steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/sponsor_actions/sponsorEGLD_triggers_egld_lottery.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getStatus/query_getStatus_[1]_[triggered].steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/player_actions/player1_claims_egld_lottery.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getStatus/query_getStatus_[1]_[claimed].steps.json"
+		}
+	]
+}

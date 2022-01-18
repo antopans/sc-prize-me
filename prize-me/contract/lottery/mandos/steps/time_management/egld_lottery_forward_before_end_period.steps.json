@@ -1,0 +1,12 @@
+{
+	"name": "EGLD lottery: forward before end period",
+	"steps": [
+		{
+			"step": "setState",
+			"comment": "Forward in time : before end of the EGLD lottery playing period",
+			"currentBlockInfo": {
+				"blockTimestamp": "59"
+			}
+		}
+	]
+}
