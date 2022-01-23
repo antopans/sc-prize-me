@@ -1,0 +1,23 @@
+{
+	"name": "getIDs query with <ended> filter ; result expected : none",
+	"steps": [
+		{
+            "step": "scQuery",
+            "txId": "get_IDs_ended_none",
+            "comment": "expected lotteries ended : none",
+            "tx": {
+                "to": "sc:lottery",
+                "function": "getIDs",
+                "arguments": [
+                    "2"
+                ]
+            },
+            "expect": {
+                "out": [
+                    []
+                ],
+                "status": "0"
+            }
+        }
+	]
+}

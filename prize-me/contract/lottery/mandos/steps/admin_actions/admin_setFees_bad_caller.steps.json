@@ -1,0 +1,29 @@
+{
+	"name": "setFees endpoint bad caller",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "setFees",
+			"comment": "non admin tries to call setFees endpoint",
+			"tx": {
+				"from": "address:player3",
+				"to": "sc:lottery",
+				"egldValue": "0",
+				"function": "setFees",
+				"arguments": [
+					"1000000000000000"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "4",
+				"message":"str:Caller address not allowed",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}

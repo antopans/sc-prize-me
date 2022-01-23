@@ -13,26 +13,23 @@
 * Endpoints & Views
 ***************
     #[endpoint(triggerEnded)]
-    ERR "Caller address not allowed"
-    NOM case with 0
-    NOM case with 2
-    NOM case with 4
+        ERR "Caller address not allowed"
+        NOM case with 0, 1, 2, 3, 4
 
     #[endpoint(cleanClaimed)]
-    ERR "Caller address not allowed"
-    NOM case with 0
-    NOM case with 2
-    NOM case with 4
+        ERR "Caller address not allowed"
+        NOM case one by one : 0, 1, 2, 3, 4
+        NOM case 2 out of 4 (EGLD(1) + NFT(3))
 
     #[endpoint(setFees)]
     #[view(getFees)]
     #[view(getFeesPool)]
-    ERR "Caller address not allowed"
+        ERR "Caller address not allowed"
     NOM case with 0 fees, getFees, check fees_pool_mapper, check fees2apply_mapper, getFeesPool
     NOM case with != 0 fees, getFees, check fees_pool_mapper, check fees2apply_mapper, getFeesPool
 
     #[endpoint(claimFees)]
-    ERR "Caller address not allowed"
+        ERR "Caller address not allowed"
     ERR "No fees to claim"
     NOM case with != 0 fees, check fees_pool_mapper, check owner account
 

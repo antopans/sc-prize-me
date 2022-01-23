@@ -1,0 +1,22 @@
+{
+	"name": "getNb query ; result expected : 1",
+	"steps": [
+		{
+            "step": "scQuery",
+            "txId": "get_nb_1",
+            "comment": "expected status : 1",
+            "tx": {
+                "to": "sc:lottery",
+                "function": "getNb",
+                "arguments": [
+                ]
+            },
+            "expect": {
+                "out": [
+                    "1"
+                ],
+                "status": "0"
+            }
+        }
+	]
+}

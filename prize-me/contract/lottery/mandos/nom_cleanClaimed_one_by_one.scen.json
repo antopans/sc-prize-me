@@ -1,0 +1,130 @@
+{
+	"name": "cleanClaimed one by one",
+	"comment": "Call cleanClaimed with the following contexts : 0, 1, 2, 3, 4 lotteries claimed",
+	"steps": [
+		{
+			"step": "externalSteps",
+			"path": "steps/initial_setup.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_cleanClaimed.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getNb/query_getNb_[4].steps.json"
+		},
+		
+
+
+		{
+			"step": "externalSteps",
+			"path": "steps/time_management/egld_lottery_forward_end_period.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_triggerEnded.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/sponsor_actions/sponsorEGLD_claims_egld_lottery.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_cleanClaimed.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getStatus/query_getStatus_[1]_[not_existing].steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getNb/query_getNb_[3].steps.json"
+		},
+
+
+
+
+		{
+			"step": "externalSteps",
+			"path": "steps/time_management/esdt_lottery_forward_end_period.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_triggerEnded.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/sponsor_actions/sponsorESDT_claims_esdt_lottery.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_cleanClaimed.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getStatus/query_getStatus_[2]_[not_existing].steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getNb/query_getNb_[2].steps.json"
+		},
+
+
+
+
+		{
+			"step": "externalSteps",
+			"path": "steps/time_management/nft_lottery_forward_end_period.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_triggerEnded.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/sponsor_actions/sponsorNFT_claims_nft_lottery.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_cleanClaimed.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getStatus/query_getStatus_[3]_[not_existing].steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getNb/query_getNb_[1].steps.json"
+		},
+
+
+
+
+		{
+			"step": "externalSteps",
+			"path": "steps/time_management/sft_lottery_forward_end_period.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_triggerEnded.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/sponsor_actions/sponsorSFT_claims_sft_lottery.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_cleanClaimed.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getStatus/query_getStatus_[4]_[not_existing].steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getNb/query_getNb_[0].steps.json"
+		}
+		
+	]
+}

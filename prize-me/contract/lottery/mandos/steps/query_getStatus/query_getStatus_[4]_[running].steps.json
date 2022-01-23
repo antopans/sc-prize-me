@@ -1,0 +1,23 @@
+{
+	"name": "getStatus query on lottery #4 ; result expected : running",
+	"steps": [
+		{
+            "step": "scQuery",
+            "txId": "get_status_4_running",
+            "comment": "expected status on lottery #4 : running",
+            "tx": {
+                "to": "sc:lottery",
+                "function": "getStatus",
+                "arguments": [
+                    "4"
+                ]
+            },
+            "expect": {
+                "out": [
+                    "1"
+                ],
+                "status": "0"
+            }
+        }
+	]
+}

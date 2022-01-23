@@ -1,0 +1,26 @@
+{
+	"name": "admin endpoints bad caller",
+	"comment": "Try to call admin endpoint with non admin address",
+	"steps": [
+		{
+			"step": "externalSteps",
+			"path": "steps/initial_setup.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_triggerEnded_bad_caller.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_cleanClaimed_bad_caller.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_setFees_bad_caller.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_claimFees_bad_caller.steps.json"
+		}
+	]
+}

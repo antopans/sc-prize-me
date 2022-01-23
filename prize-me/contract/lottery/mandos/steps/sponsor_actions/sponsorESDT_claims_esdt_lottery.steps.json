@@ -1,0 +1,28 @@
+{
+	"name": "sponsor ESDT claims egld lottery",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "claim-esdt-lottery",
+			"comment": "SponsorESDT claims ESDT lottery",
+			"tx": {
+				"from": "address:sponsorESDT",
+				"to": "sc:lottery",
+				"egldValue": "0",
+				"function": "claimPrize",
+				"arguments": [
+					"2"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "0",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}
