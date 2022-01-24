@@ -6,7 +6,6 @@ mod instance_info;
 mod instance_status;
 mod random;
 
-use instance_info::InstanceInfoTmp;
 use instance_info::InstanceInfo;
 use instance_info::PrizeInfo;
 use instance_info::SponsorInfo;
@@ -16,44 +15,7 @@ use random::Random;
 
 #[elrond_wasm::contract]
 pub trait Lottery {
-    /////////////////////////////////////////////////////////////////////
-    // SC debug API
-    /////////////////////////////////////////////////////////////////////
-    #[view(getInfoTmp)]
-    fn get_instance_info_tmp(&self, iid: u32) -> InstanceInfoTmp<Self::Api> {
-        // Init sponsor information
-        let sponsor_info = SponsorInfo {
-            pseudo: ManagedBuffer::default(),
-            url: ManagedBuffer::default(),
-            picture_link: ManagedBuffer::default(),
-            free_text: ManagedBuffer::default(),
-        };
-
-        // Init instance information
-        let mut instance_info_tmp = InstanceInfoTmp {
-            token_amount: BigUint::zero(),
-            sponsor_info: sponsor_info,
-        };
-
-        // Retrieve instance information
-        match self.instance_info_mapper().get(&iid) {
-            None => {
-                // Instance does not exist, return default content
-
-            }
-            Some(instance_info) => {
-                // Instance found : return info
-                instance_info_tmp.token_amount = instance_info.prize_info.token_amount;
-                instance_info_tmp.sponsor_info.pseudo = instance_info.sponsor_info.pseudo;
-                instance_info_tmp.sponsor_info.url = instance_info.sponsor_info.url;
-                instance_info_tmp.sponsor_info.picture_link = instance_info.sponsor_info.picture_link;
-                instance_info_tmp.sponsor_info.free_text = instance_info.sponsor_info.free_text;
-            }
-        }
-
-        return instance_info_tmp;
-    }
-
+    
     /////////////////////////////////////////////////////////////////////
     // SC Management API
     /////////////////////////////////////////////////////////////////////

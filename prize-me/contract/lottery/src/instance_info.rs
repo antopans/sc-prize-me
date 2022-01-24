@@ -30,9 +30,3 @@ pub struct InstanceInfo<M: ManagedTypeApi> {
     pub claimed_status: bool,
     pub winner_address: ManagedAddress<M>,
 }
-
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
-pub struct InstanceInfoTmp<M: ManagedTypeApi> {
-    pub token_amount: BigUint<M>,
-    pub sponsor_info: SponsorInfo<M>,
-}
