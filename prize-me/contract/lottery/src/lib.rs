@@ -39,7 +39,7 @@ pub trait Lottery {
     fn trigger_ended_instances(&self) -> SCResult<()> {
         only_owner!(self, "Caller address not allowed");
 
-        let ended_instances: Vec<u32> = self.get_instance_ids(MultiArgVec(Vec::from([InstanceStatus::Ended])));
+        let ended_instances: VarArgs<u32> = self.get_instance_ids(MultiArgVec(Vec::from([InstanceStatus::Ended])));
 
         for iid in ended_instances.iter() {
             self.trigger(iid.clone());
@@ -52,7 +52,7 @@ pub trait Lottery {
     fn clean_claimed_instances(&self) -> SCResult<()> {
         only_owner!(self, "Caller address not allowed");
         
-        let claimed_instances: Vec<u32> = self.get_instance_ids(MultiArgVec(Vec::from([InstanceStatus::Claimed])));
+        let claimed_instances: VarArgs<u32> = self.get_instance_ids(MultiArgVec(Vec::from([InstanceStatus::Claimed])));
 
         for iid in claimed_instances.iter() {
             self.instance_players_set_mapper(iid.clone()).clear();
@@ -296,37 +296,67 @@ pub trait Lottery {
     }
 
     #[view(getInfo)]
-    fn get_instance_info(&self, iid: u32) -> MultiResult4<SCResult<()>, OptionalResult<InstanceInfo<Self::Api>>, OptionalResult<InstanceStatus>, OptionalResult<usize>> {
-        let result: MultiArg4<
-            SCResult<()>,
-            OptionalResult<InstanceInfo<Self::Api>>,
-            OptionalResult<InstanceStatus>,
-            OptionalResult<usize>,
-        >;
+    // Returns : (Result, optional (status, number of players, info)) of instance identified by iid provided  
+    fn get_instance_info(&self, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<MultiResult3<InstanceStatus, usize, InstanceInfo<Self::Api>>>> {
+        
+        let result: MultiResult2<SCResult<()>, OptionalResult<MultiResult3<InstanceStatus, usize, InstanceInfo<Self::Api>>>>;
 
         // Retrieve instance information
         match self.instance_info_mapper().get(&iid) {
             None => {
                 // Instance does not exist
-                result = MultiArg4((
+                result = MultiArg2((
                     sc_error!("Instance does not exists"),
-                    OptionalArg::None,
-                    OptionalArg::None,
                     OptionalArg::None,
                 ));
             }
             Some(instance_info) => {
                 // Instance found : return info, status and number of players
-                result = MultiArg4((
+                result = MultiArg2((
                     Ok(()),
-                    OptionalArg::Some(instance_info),
-                    OptionalArg::Some(self.get_instance_status(iid)),
-                    OptionalArg::Some(self.instance_players_set_mapper(iid).len()),
+                    OptionalArg::Some(MultiArg3((
+                        self.get_instance_status(iid),
+                        self.instance_players_set_mapper(iid).len(),
+                        instance_info))),
                 ));
             }
         }
 
         return result;
+    }
+            
+    #[view(getAllInfo)]
+    // Returns : (ID, status, number of players, info) of all instances selected by the status filter provided  
+    fn get_all_instance_info(&self, #[var_args] status_filter: VarArgs<InstanceStatus>) -> VarArgs<MultiArg4<u32, InstanceStatus, usize, InstanceInfo<Self::Api>>> {
+
+        let mut instances: VarArgs<MultiArg4<u32, InstanceStatus, usize, InstanceInfo<Self::Api>>> = VarArgs::new();
+        let mut status_filter_vec = status_filter.clone().into_vec();
+
+        // Ensure at least one status is provided as filter, check also overflow regarding the maximum possible values for status
+        if status_filter.len() >= 1 && status_filter.len() <= InstanceStatus::VARIANT_COUNT {
+
+            // Remove duplicates
+            status_filter_vec.sort();
+            status_filter_vec.dedup();
+
+            // Return all instances IDs which meet the status filter provided in parameter
+            for iid in self.instance_info_mapper().keys() {
+                for status in status_filter_vec.iter() {
+                    if self.get_instance_status(iid) == status.clone() {
+                        let result_vec_item = MultiArg4((
+                            iid,
+                            self.get_instance_status(iid), 
+                            self.instance_players_set_mapper(iid).len(),
+                            self.instance_info_mapper().get(&iid).unwrap(),
+                        ));
+                        instances.push(result_vec_item);
+                        break;
+                    }   
+                }
+            }
+        }
+
+        return instances;
     }
 
     #[view(getRemainingTime)]
@@ -356,14 +386,14 @@ pub trait Lottery {
 
     #[view(hasStatus)]
     fn is_instance_with_status(&self, instance_status: InstanceStatus) -> bool {
-        let instances: Vec<u32> = self.get_instance_ids(MultiArgVec(Vec::from([instance_status])));
+        let instances: VarArgs<u32> = self.get_instance_ids(MultiArgVec(Vec::from([instance_status])));
         return instances.len() != 0;
     }
 
     #[view(getIDs)]
-    fn get_instance_ids(&self, #[var_args] status_filter: VarArgs<InstanceStatus>) -> Vec<u32> {
+    fn get_instance_ids(&self, #[var_args] status_filter: VarArgs<InstanceStatus>) -> VarArgs<u32> {
 
-        let mut instance_ids = Vec::new();
+        let mut instance_ids = VarArgs::new();
         let mut status_filter_vec = status_filter.clone().into_vec();
 
         // Ensure at least one status is provided as filter, check also overflow regarding the maximum possible values for status
@@ -378,6 +408,7 @@ pub trait Lottery {
                 for status in status_filter_vec.iter() {
                     if self.get_instance_status(iid) == status.clone() {
                         instance_ids.push(iid.clone());
+                        break;
                     }   
                 }
             }
@@ -387,8 +418,8 @@ pub trait Lottery {
     }
 
     #[view(getSponsorIDs)]
-    fn get_sponsor_instances(&self, sponsor_address: ManagedAddress) -> Vec<u32> {
-        let mut sponsor_iids = Vec::new();
+    fn get_sponsor_instances(&self, sponsor_address: ManagedAddress) -> VarArgs<u32> {
+        let mut sponsor_iids = VarArgs::new();
 
         // Return all instances IDs with sponsor address matching the one provided in parameter
         for instance in self.instance_info_mapper().iter() {
@@ -401,8 +432,8 @@ pub trait Lottery {
     }
 
     #[view(getPlayerIDs)]
-    fn get_player_instances(&self, player_address: ManagedAddress) -> Vec<u32> {
-        let mut player_iids = Vec::new();
+    fn get_player_instances(&self, player_address: ManagedAddress) -> VarArgs<u32> {
+        let mut player_iids = VarArgs::new();
 
         // Return all instances IDs to which player address provided in parameter has played
         for iid in self.instance_info_mapper().keys() {
