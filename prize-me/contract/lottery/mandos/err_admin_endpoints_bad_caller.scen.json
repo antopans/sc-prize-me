@@ -16,7 +16,7 @@
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/admin_actions/admin_setFees_bad_caller.steps.json"
+			"path": "steps/admin_actions/admin_setFeePol_bad_caller.steps.json"
 		},
 		{
 			"step": "externalSteps",

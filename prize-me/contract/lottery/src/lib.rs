@@ -4,12 +4,15 @@ elrond_wasm::imports!();
 
 mod instance_info;
 mod instance_status;
+mod fee_policy;
 mod random;
 
 use instance_info::InstanceInfo;
+use instance_info::SponsorRewards;
 use instance_info::PrizeInfo;
 use instance_info::SponsorInfo;
 use instance_status::InstanceStatus;
+use fee_policy::FeePolicy;
 use random::Random;
 
 
@@ -25,8 +28,13 @@ pub trait Lottery {
         
         // Initializations @ deployment only 
         self.iid_counter_mapper().set_if_empty(&0u32);
-        self.fees_pool_mapper().set_if_empty(&BigUint::zero());
-        self.fees2apply_mapper().set_if_empty(&BigUint::zero()); // Fees = 0 EGLD @ SC deployment
+        self.fee_pool_mapper().set_if_empty(&BigUint::zero());
+
+        let default_fee_policy = FeePolicy {
+            fee_amount_egld : BigUint::zero(),
+            sponsor_reward_percent : 0u8,
+        };
+        self.fee_policy_mapper().set_if_empty(&default_fee_policy);
 
         Ok(())
     }
@@ -63,12 +71,18 @@ pub trait Lottery {
         Ok(())
     }
 
-    #[endpoint(setFees)]
-    fn set_fees(&self, fees_amount: BigUint) -> SCResult<()> {
+    #[endpoint(setFeePol)]
+    fn set_fees(&self, fee_amount_egld: BigUint, sponsor_reward_percent: u8) -> SCResult<()> {
         only_owner!(self, "Caller address not allowed");
+        require!(sponsor_reward_percent <= 100, "Wrong value for sponsor reward");
 
-        // Set fees in EGLD
-        self.fees2apply_mapper().set(&fees_amount); 
+        // Save fee policy
+        let fee_policy = FeePolicy {
+            fee_amount_egld : fee_amount_egld,
+            sponsor_reward_percent : sponsor_reward_percent,
+        };
+
+        self.fee_policy_mapper().set(&fee_policy); 
 
         Ok(())
     }
@@ -76,20 +90,20 @@ pub trait Lottery {
     #[endpoint(claimFees)]
     fn claim_fees(&self) -> SCResult<()> {
         only_owner!(self, "Caller address not allowed");
-        require!(self.fees_pool_mapper().get() != BigUint::zero(), "No fees to claim");
+        require!(self.fee_pool_mapper().get() != BigUint::zero(), "No fees to claim");
         
         // Claim fees and clear the pool
-        self.send().direct_egld(&self.blockchain().get_owner_address(), &self.fees_pool_mapper().get(), b"Fees from pool claimed");
-        self.fees_pool_mapper().clear();
+        self.send().direct_egld(&self.blockchain().get_owner_address(), &self.fee_pool_mapper().get(), b"Fees from pool claimed");
+        self.fee_pool_mapper().clear();
 
         Ok(())
     }
 
-    #[view(getFeesPool)]
-    fn get_fees_pool(&self) -> BigUint {
+    #[view(getFeePool)]
+    fn get_fee_pool(&self) -> BigUint {
                
         // Get the current amount of fees in the pool
-        return self.fees_pool_mapper().get(); 
+        return self.fee_pool_mapper().get(); 
     }
 
     /////////////////////////////////////////////////////////////////////
@@ -128,6 +142,12 @@ pub trait Lottery {
             token_amount: token_amount,
         };
 
+        // Fill sponsor rewards
+        let sponsor_rewards = SponsorRewards {
+            rewards_pool: BigUint::zero(),
+            reward_percent: self.fee_policy_mapper().get().sponsor_reward_percent,
+        };
+
         // Fill instance information
         let instance_info = InstanceInfo {
             sponsor_address: self.blockchain().get_caller(),
@@ -136,6 +156,7 @@ pub trait Lottery {
             deadline: deadline,
             claimed_status: false,
             winner_address: ManagedAddress::zero(),
+            sponsor_rewards: sponsor_rewards,
         };
 
         // Record new instance
@@ -166,19 +187,29 @@ pub trait Lottery {
                     );
                 }
 
+                // Send rewards to sponsor
+                if instance_info.sponsor_rewards.rewards_pool > BigUint::zero() {
+        
+                    self.send().direct_egld(
+                        &instance_info.sponsor_address,
+                        &instance_info.sponsor_rewards.rewards_pool,
+                        b"Sponsor rewards",
+                    );
+                }
+
                 let mut updated_instance_info = instance_info;
 
                 if self.instance_players_vec_mapper(iid).len() == 0 {
                     // No player, give prize back to instance sponsor
                     updated_instance_info.winner_address =
-                        updated_instance_info.sponsor_address.clone();
+                    updated_instance_info.sponsor_address.clone();
                 } else {
                     // Choose winner
                     let seed = self.blockchain().get_block_random_seed_legacy();
                     let mut rand = Random::new(*seed);
                     let winning_address_index =
                         (rand.next() as usize % self.instance_players_vec_mapper(iid).len()) + 1;
-                    updated_instance_info.winner_address = self
+                        updated_instance_info.winner_address = self
                         .instance_players_vec_mapper(iid)
                         .get(winning_address_index);
                 }
@@ -203,11 +234,23 @@ pub trait Lottery {
         let caller = self.blockchain().get_caller();
         require!(self.get_instance_status(iid) == InstanceStatus::Running, "Instance is not active");
         require!(self.instance_players_set_mapper(iid).contains(&caller) == false, "Player has already played");
-        require!(fees == self.fees2apply_mapper().get(), "Wrong fees amount");
+        require!(fees == self.fee_policy_mapper().get().fee_amount_egld, "Wrong fees amount");
 
-        // Add fees to the pool
+        // Capitalize fees and set sponsor rewards
         if fees != BigUint::zero() {
-            self.fees_pool_mapper().update(|total_fees| *total_fees += fees);
+            let mut instance_info: InstanceInfo<Self::Api> = self.instance_info_mapper().get(&iid).unwrap();
+
+            // Compute sponsor rewards
+            let sponsor_reward_percent:BigUint = BigUint::from(instance_info.sponsor_rewards.reward_percent);
+            let sponsor_reward_amount: BigUint = fees.clone() * sponsor_reward_percent / BigUint::from(100u8);
+            let remaining_fees: BigUint = fees - sponsor_reward_amount.clone();
+
+            // Add rewards to sponsor rewards pool
+            instance_info.sponsor_rewards.rewards_pool += sponsor_reward_amount;
+            self.instance_info_mapper().insert(iid, instance_info);
+
+            // Add fees to pool
+            self.fee_pool_mapper().update(|total_fees| *total_fees += remaining_fees);
         }
 
         // Add caller address to participants for this instance
@@ -257,11 +300,11 @@ pub trait Lottery {
     // DApp view API
     /////////////////////////////////////////////////////////////////////
 
-    #[view(getFees)]
-    fn get_fees(&self) -> BigUint {
-               
-        // Get fees in EGLD
-        return self.fees2apply_mapper().get(); 
+    #[view(getFeePol)]
+    fn get_fee_policy(&self) -> MultiResult2<BigUint, u8> {        
+        let current_fee_policy: FeePolicy<Self::Api> = self.fee_policy_mapper().get();
+
+        return MultiArg2((current_fee_policy.fee_amount_egld, current_fee_policy.sponsor_reward_percent)); 
     }
 
     #[view(getNb)]
@@ -456,7 +499,7 @@ pub trait Lottery {
     #[view(hasWon)]
     fn has_won(&self, iid: u32, player_address: ManagedAddress) -> MultiResult2<SCResult<()>, OptionalResult<bool>> {
 
-        let result = MultiResult2<SCResult<()>, OptionalResult<bool>>;
+        let result: MultiResult2<SCResult<()>, OptionalResult<bool>>;
 
         // Retrieve instance information
         match self.instance_info_mapper().get(&iid) {
@@ -483,10 +526,10 @@ pub trait Lottery {
     /////////////////////////////////////////////////////////////////////
 
     // Fees
-    #[storage_mapper("fees2apply")]
-    fn fees2apply_mapper(&self) -> SingleValueMapper<BigUint>;
-    #[storage_mapper("fees_pool")]
-    fn fees_pool_mapper(&self) -> SingleValueMapper<BigUint>;
+    #[storage_mapper("fee_policy")]
+    fn fee_policy_mapper(&self) -> SingleValueMapper<FeePolicy<Self::Api>>;
+    #[storage_mapper("fee_pool")]
+    fn fee_pool_mapper(&self) -> SingleValueMapper<BigUint>;
 
     // Instance counter
     #[storage_mapper("iid_counter")]

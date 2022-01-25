@@ -57,8 +57,8 @@ claimFees() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="claimFees" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
- getFeesPool() {
-    erdpy --verbose contract query ${ADDRESS} --function="getFeesPool" --proxy=${PROXY} 
+ getFeePool() {
+    erdpy --verbose contract query ${ADDRESS} --function="getFeePool" --proxy=${PROXY} 
 }
 
 ######################################################################
@@ -103,8 +103,8 @@ claimPrize() {
 # DApp view API
 ######################################################################
 
- getFees() {
-    erdpy --verbose contract query ${ADDRESS} --function="getFees" --proxy=${PROXY} 
+ getFeePol() {
+    erdpy --verbose contract query ${ADDRESS} --function="getFeePol" --proxy=${PROXY} 
 }
 
  getNb() {

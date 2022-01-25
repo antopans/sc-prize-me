@@ -1,17 +1,18 @@
 {
-	"name": "setFees endpoint bad caller",
+	"name": "setFeePol endpoint bad caller",
 	"steps": [
 		{
 			"step": "scCall",
-			"txId": "setFees",
-			"comment": "non admin tries to call setFees endpoint",
+			"txId": "setFeePol",
+			"comment": "non admin tries to call setFeePol endpoint",
 			"tx": {
 				"from": "address:player3",
 				"to": "sc:lottery",
 				"egldValue": "0",
-				"function": "setFees",
+				"function": "setFeePol",
 				"arguments": [
-					"1000000000000000"
+					"1000000000000000",
+					"u8:20"
 				],
 				"gasLimit": "5,000,000,000",
 				"gasPrice": "0"

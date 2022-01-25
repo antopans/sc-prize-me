@@ -22,9 +22,16 @@ pub struct PrizeInfo<M: ManagedTypeApi> {
 }
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
+pub struct SponsorRewards<M: ManagedTypeApi> {
+    pub rewards_pool: BigUint<M>,
+    pub reward_percent: u8,
+}
+
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct InstanceInfo<M: ManagedTypeApi> {
     pub sponsor_address: ManagedAddress<M>,
     pub sponsor_info: SponsorInfo<M>,
+    pub sponsor_rewards: SponsorRewards<M>,
     pub prize_info: PrizeInfo<M>,
     pub deadline: u64,
     pub claimed_status: bool,

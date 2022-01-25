@@ -41,6 +41,7 @@
     ERR "Instance is not in the good state"
     ERR "Instance can only be triggered by its sponsor or by administrator"
     NOM Trigger with no player -> prize to sponsor
+    NOM Sponsor rewards
 
     #[endpoint(play)]
     #[view(getFeesPool)]
