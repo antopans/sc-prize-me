@@ -361,7 +361,7 @@ pub trait Lottery {
 
     #[view(getRemainingTime)]
     fn get_remaining_time(&self, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<u64>> {
-        let result;
+        let result: MultiResult2<SCResult<()>, OptionalResult<u64>>;
 
         // Retrieve instance information
         match self.instance_info_mapper().get(&iid) {
@@ -455,21 +455,27 @@ pub trait Lottery {
 
     #[view(hasWon)]
     fn has_won(&self, iid: u32, player_address: ManagedAddress) -> MultiResult2<SCResult<()>, OptionalResult<bool>> {
+
+        let result = MultiResult2<SCResult<()>, OptionalResult<bool>>;
+
         // Retrieve instance information
         match self.instance_info_mapper().get(&iid) {
             None => {
                 // Instance does not exist
-                return MultiArg2((sc_error!("Instance does not exists"), OptionalResult::None));
+                result = MultiArg2((sc_error!("Instance does not exists"), OptionalResult::None));
             }
             Some(instance_info) => {
                 // Return true is player_address provided in parameter is the winner address for the specified instance ID
                 if instance_info.winner_address == player_address {
-                    return MultiArg2((Ok(()), OptionalResult::Some(true)));
+                    result = MultiArg2((Ok(()), OptionalResult::Some(true)));
+                }
+                else {
+                    result = MultiArg2((Ok(()), OptionalResult::Some(false)))
                 }
             }
         }
 
-        return MultiArg2((Ok(()), OptionalResult::Some(false)));
+        return result;
     }
 
     /////////////////////////////////////////////////////////////////////
