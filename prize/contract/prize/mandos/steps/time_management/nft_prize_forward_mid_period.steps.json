@@ -1,0 +1,12 @@
+{
+	"name": "NFT prize: forward mid period",
+	"steps": [
+		{
+			"step": "setState",
+			"comment": "Forward in time : middle of the NFT prize playing period",
+			"currentBlockInfo": {
+				"blockTimestamp": "1800"
+			}
+		}
+	]
+}

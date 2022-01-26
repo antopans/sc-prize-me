@@ -1,0 +1,23 @@
+{
+	"name": "Initial setup",
+	"steps": [
+		{
+			"step": "externalSteps",
+			"path": "init_accounts.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "deploy_contract.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "create_prizes.steps.json"
+		},
+		{
+			"step": "setState",
+			"currentBlockInfo": {
+				"blockNonce": "1"
+			}
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"name": "SFT prize: forward end period",
+	"steps": [
+		{
+			"step": "setState",
+			"comment": "Forward in time : end of the SFT prize playing period",
+			"currentBlockInfo": {
+				"blockTimestamp": "604801"
+			}
+		}
+	]
+}

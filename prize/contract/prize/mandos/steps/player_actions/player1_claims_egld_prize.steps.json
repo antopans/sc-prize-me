@@ -1,0 +1,28 @@
+{
+	"name": "player1 claims egld prize",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "claim-egld-prize",
+			"comment": "Player1 claims EGLD prize",
+			"tx": {
+				"from": "address:player1",
+				"to": "sc:prize",
+				"egldValue": "0",
+				"function": "claimPrize",
+				"arguments": [
+					"1"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "0",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}

@@ -1,0 +1,28 @@
+{
+	"name": "player1 claims nft prize",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "claim-nft-prize",
+			"comment": "Player1 claims NFT prize",
+			"tx": {
+				"from": "address:player1",
+				"to": "sc:prize",
+				"egldValue": "0",
+				"function": "claimPrize",
+				"arguments": [
+					"3"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "0",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}

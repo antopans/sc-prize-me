@@ -1,0 +1,23 @@
+{
+	"name": "getStatus query on prize #4 ; result expected : not existing",
+	"steps": [
+		{
+            "step": "scQuery",
+            "txId": "get_status_4_not_existing",
+            "comment": "expected status on prize #4 : not existing",
+            "tx": {
+                "to": "sc:prize",
+                "function": "getStatus",
+                "arguments": [
+                    "4"
+                ]
+            },
+            "expect": {
+                "out": [
+                    "0"
+                ],
+                "status": "0"
+            }
+        }
+	]
+}

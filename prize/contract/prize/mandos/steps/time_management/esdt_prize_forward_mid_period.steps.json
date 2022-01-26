@@ -1,0 +1,12 @@
+{
+	"name": "ESDT prize: forward mid period",
+	"steps": [
+		{
+			"step": "setState",
+			"comment": "Forward in time : middle of the ESDT prize playing period",
+			"currentBlockInfo": {
+				"blockTimestamp": "90"
+			}
+		}
+	]
+}

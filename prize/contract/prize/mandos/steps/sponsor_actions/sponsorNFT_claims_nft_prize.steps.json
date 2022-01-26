@@ -1,0 +1,28 @@
+{
+	"name": "sponsor NFT claims nft prize",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "claim-nft-prize",
+			"comment": "SponsorNFT claims NFT prize",
+			"tx": {
+				"from": "address:sponsorNFT",
+				"to": "sc:prize",
+				"egldValue": "0",
+				"function": "claimPrize",
+				"arguments": [
+					"3"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "0",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}

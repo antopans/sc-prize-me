@@ -1,0 +1,24 @@
+{
+	"name": "deploy prize sc",
+	"steps": [
+        {
+			"step": "scDeploy",
+			"txId": "deploy-sc-prize",
+			"tx": {
+				"from": "address:owner",
+				"value": "0",
+				"contractCode": "file:../../output/prize.wasm",
+				"arguments": [
+				],
+				"gasLimit": "100,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [],
+				"status": "",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}

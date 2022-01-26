@@ -1,0 +1,50 @@
+{
+	"name": "triggerEnded",
+	"comment": "Call triggerEnded with the following contexts : 0, 1, 2, 3, 4 prizes ended",
+	"steps": [
+		{
+			"step": "externalSteps",
+			"path": "steps/initial_setup.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_triggerEnded.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getIDs/query_getIDs_[2]_[none].steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/time_management/egld_prize_forward_end_period.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getIDs/query_getIDs_[2]_[1].steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/time_management/esdt_prize_forward_end_period.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getIDs/query_getIDs_[2]_[1-2].steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/time_management/nft_prize_forward_end_period.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getIDs/query_getIDs_[2]_[1-2-3].steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/time_management/sft_prize_forward_end_period.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/query_getIDs/query_getIDs_[2]_[1-2-3-4].steps.json"
+		}
+	]
+}

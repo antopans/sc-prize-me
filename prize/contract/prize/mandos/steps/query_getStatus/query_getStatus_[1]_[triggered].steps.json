@@ -1,0 +1,23 @@
+{
+	"name": "getStatus query on prize #1 ; result expected : triggered",
+	"steps": [
+		{
+            "step": "scQuery",
+            "txId": "get_status_1_triggered",
+            "comment": "expected status on prize #1 : triggered",
+            "tx": {
+                "to": "sc:prize",
+                "function": "getStatus",
+                "arguments": [
+                    "1"
+                ]
+            },
+            "expect": {
+                "out": [
+                    "3"
+                ],
+                "status": ""
+            }
+        }
+	]
+}

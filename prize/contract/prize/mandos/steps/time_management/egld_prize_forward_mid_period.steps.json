@@ -1,0 +1,12 @@
+{
+	"name": "EGLD prize: forward mid period",
+	"steps": [
+		{
+			"step": "setState",
+			"comment": "Forward in time : middle of the EGLD prize playing period",
+			"currentBlockInfo": {
+				"blockTimestamp": "30"
+			}
+		}
+	]
+}
