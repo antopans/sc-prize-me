@@ -27,6 +27,7 @@ echo "***************"
 echo "* Structures"
 echo "***************"
 sed -E "/elrond_wasm/d" src/instance_info.rs 
+sed -E "/elrond_wasm/d" src/fee_policy.rs 
 echo ""
 
 echo "***************"
