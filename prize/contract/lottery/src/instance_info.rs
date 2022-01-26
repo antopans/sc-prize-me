@@ -10,7 +10,7 @@ elrond_wasm::derive_imports!();
 pub struct SponsorInfo<M: ManagedTypeApi> {
     pub pseudo: ManagedBuffer<M>,
     pub url: ManagedBuffer<M>,
-    pub picture_link: ManagedBuffer<M>,
+    pub logo_link: ManagedBuffer<M>,
     pub free_text: ManagedBuffer<M>,
 }
 

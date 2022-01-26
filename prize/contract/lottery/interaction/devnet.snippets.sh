@@ -67,13 +67,13 @@ claimFees() {
 EGLD_AMOUNT="10000000000000000"     #10000000000000000 => 0.01 EGLD
 PSEUDO="0x$(xxd -pu -c 256 <<< "E-MOON")"
 URL="0x$(xxd -pu -c 256  <<< "https://emoon.space/")"
-PICTURE_LINK="0x$(xxd -pu -c 256  <<< "https://media.heartlandtv.com/images/HARVEST+MOON+SD.jpg")"
+LOGO_LINK="0x$(xxd -pu -c 256  <<< "https://media.heartlandtv.com/images/HARVEST+MOON+SD.jpg")"
 FREE_TEXT="0x$(xxd -pu -c 256  <<< "Buy & sell NFTs !!!")"
 
 # Param #1 : duration in seconds
 # Param #2 : pem wallet
 create() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=50000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL} ${PICTURE_LINK} ${FREE_TEXT} --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=50000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL} ${LOGO_LINK} ${FREE_TEXT} --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # Param1 : Instance ID

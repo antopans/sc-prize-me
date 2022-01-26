@@ -111,7 +111,7 @@ pub trait Lottery {
     /////////////////////////////////////////////////////////////////////
     #[payable("*")]
     #[endpoint(create)]
-    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url: ManagedBuffer, picture_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
+    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
         
         let result;
 
@@ -131,7 +131,7 @@ pub trait Lottery {
         let sponsor_info = SponsorInfo {
             pseudo: pseudo,
             url: url,
-            picture_link: picture_link,
+            logo_link: logo_link,
             free_text: free_text,
         };
 
