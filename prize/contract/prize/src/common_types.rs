@@ -4,7 +4,14 @@ use elrond_wasm::types::ManagedAddress;
 use elrond_wasm::types::ManagedBuffer;
 use elrond_wasm::types::TokenIdentifier;
 
+extern crate variant_count;
+use variant_count::VariantCount;
+
 elrond_wasm::derive_imports!();
+
+////////////////////////////////////////////////////////////////////
+// Structures
+////////////////////////////////////////////////////////////////////
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct SponsorInfo<M: ManagedTypeApi> {
@@ -38,3 +45,21 @@ pub struct InstanceData<M: ManagedTypeApi> {
     pub disabled: bool,
 }
 
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
+pub struct FeePolicy<M: ManagedTypeApi> {
+    pub fee_amount_egld: BigUint<M>,
+    pub sponsor_reward_percent: u8,
+}
+
+////////////////////////////////////////////////////////////////////
+// Enums
+////////////////////////////////////////////////////////////////////
+
+#[derive(TopEncode, TopDecode, TypeAbi, PartialEq, Clone, Copy, VariantCount, Ord, PartialOrd, Eq)]
+pub enum InstanceStatus {
+    NotExisting,
+    Running,
+    Ended,
+    Triggered,
+    Claimed,
+}

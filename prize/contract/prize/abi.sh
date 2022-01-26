@@ -22,16 +22,5 @@ echo "* Detailed API"
 echo "***************"
 sed -n '/^    fn .*{/p' src/lib.rs
 echo ""
-
-echo "***************"
-echo "* Structures"
-echo "***************"
-sed -E "/elrond_wasm/d" src/instance_info.rs 
-sed -E "/elrond_wasm/d" src/fee_policy.rs 
-echo ""
-
-echo "***************"
-echo "* Enums"
-echo "***************"
-sed -E "/elrond_wasm|variant_count/d" src/instance_status.rs 
+sed -E "/elrond_wasm|variant_count/d" src/common_types.rs 
 echo ""

@@ -2,17 +2,15 @@
 
 elrond_wasm::imports!();
 
-mod instance_structs;
-mod instance_status;
-mod fee_policy;
+mod common_types;
 mod random;
 
-use instance_structs::InstanceInfo;
-use instance_structs::InstanceData;
-use instance_structs::PrizeInfo;
-use instance_structs::SponsorInfo;
-use instance_status::InstanceStatus;
-use fee_policy::FeePolicy;
+use common_types::InstanceInfo;
+use common_types::InstanceData;
+use common_types::PrizeInfo;
+use common_types::SponsorInfo;
+use common_types::InstanceStatus;
+use common_types::FeePolicy;
 use random::Random;
 
 
