@@ -8,10 +8,12 @@ elrond_wasm::derive_imports!();
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct SponsorInfo<M: ManagedTypeApi> {
+    pub address: ManagedAddress<M>,
     pub pseudo: ManagedBuffer<M>,
     pub url: ManagedBuffer<M>,
     pub logo_link: ManagedBuffer<M>,
     pub free_text: ManagedBuffer<M>,
+    pub reward_percent: u8,
 }
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
@@ -22,18 +24,17 @@ pub struct PrizeInfo<M: ManagedTypeApi> {
 }
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
-pub struct SponsorRewards<M: ManagedTypeApi> {
-    pub rewards_pool: BigUint<M>,
-    pub reward_percent: u8,
+pub struct InstanceInfo<M: ManagedTypeApi> {
+    pub sponsor_info: SponsorInfo<M>,
+    pub prize_info: PrizeInfo<M>,
+    pub deadline: u64,
 }
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
-pub struct InstanceInfo<M: ManagedTypeApi> {
-    pub sponsor_address: ManagedAddress<M>,
-    pub sponsor_info: SponsorInfo<M>,
-    pub sponsor_rewards: SponsorRewards<M>,
-    pub prize_info: PrizeInfo<M>,
-    pub deadline: u64,
+pub struct InstanceData<M: ManagedTypeApi> {
+    pub sponsor_rewards_pool: BigUint<M>,
     pub claimed_status: bool,
     pub winner_address: ManagedAddress<M>,
+    pub disabled: bool,
 }
+

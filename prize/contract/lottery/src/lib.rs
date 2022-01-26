@@ -2,15 +2,15 @@
 
 elrond_wasm::imports!();
 
-mod instance_info;
+mod instance_structs;
 mod instance_status;
 mod fee_policy;
 mod random;
 
-use instance_info::InstanceInfo;
-use instance_info::SponsorRewards;
-use instance_info::PrizeInfo;
-use instance_info::SponsorInfo;
+use instance_structs::InstanceInfo;
+use instance_structs::InstanceData;
+use instance_structs::PrizeInfo;
+use instance_structs::SponsorInfo;
 use instance_status::InstanceStatus;
 use fee_policy::FeePolicy;
 use random::Random;
@@ -66,6 +66,7 @@ pub trait Lottery {
             self.instance_players_set_mapper(iid.clone()).clear();
             self.instance_players_vec_mapper(iid.clone()).clear();
             self.instance_info_mapper().remove(&iid);
+            self.instance_data_mapper().remove(&iid);
         }
 
         Ok(())
@@ -121,18 +122,20 @@ pub trait Lottery {
             return result;
         }
 
-        // Compute instance deadline based on current time & duration parameter
-        let deadline = self.blockchain().get_block_timestamp() + duration_in_s;
-
         // Compute next iid
         let new_iid = self.iid_counter_mapper().get() + 1;
 
+        // Compute instance deadline based on current time & duration parameter
+        let deadline = self.blockchain().get_block_timestamp() + duration_in_s;
+
         // Fill sponsor information
         let sponsor_info = SponsorInfo {
+            address: self.blockchain().get_caller(),
             pseudo: pseudo,
             url: url,
             logo_link: logo_link,
             free_text: free_text,
+            reward_percent: self.fee_policy_mapper().get().sponsor_reward_percent,
         };
 
         // Fill prize information
@@ -142,25 +145,24 @@ pub trait Lottery {
             token_amount: token_amount,
         };
 
-        // Fill sponsor rewards
-        let sponsor_rewards = SponsorRewards {
-            rewards_pool: BigUint::zero(),
-            reward_percent: self.fee_policy_mapper().get().sponsor_reward_percent,
-        };
-
-        // Fill instance information
+        // Aggregate instance information
         let instance_info = InstanceInfo {
-            sponsor_address: self.blockchain().get_caller(),
             sponsor_info: sponsor_info,
             prize_info: prize_info,
             deadline: deadline,
+        };
+
+        // Initialize instance data
+        let instance_data = InstanceData {
+            sponsor_rewards_pool: BigUint::zero(),
             claimed_status: false,
             winner_address: ManagedAddress::zero(),
-            sponsor_rewards: sponsor_rewards,
+            disabled: false,
         };
 
         // Record new instance
         self.instance_info_mapper().insert(new_iid, instance_info);
+        self.instance_data_mapper().insert(new_iid, instance_data);
         self.iid_counter_mapper().set(&new_iid);
 
         // Format result
@@ -175,50 +177,42 @@ pub trait Lottery {
             "Instance is not in the good state"
         );
 
-        // Get instance info
-        match self.instance_info_mapper().get(&iid) {
-            None => return sc_error!("Unexpected error"),
-            Some(instance_info) => {
-                if (self.blockchain().get_caller() != instance_info.sponsor_address)
-                    && (self.blockchain().get_caller() != self.blockchain().get_owner_address())
-                {
-                    return sc_error!(
-                        "Instance can only be triggered by its sponsor or by administrator"
-                    );
-                }
-
-                // Send rewards to sponsor
-                if instance_info.sponsor_rewards.rewards_pool > BigUint::zero() {
-        
-                    self.send().direct_egld(
-                        &instance_info.sponsor_address,
-                        &instance_info.sponsor_rewards.rewards_pool,
-                        b"Sponsor rewards",
-                    );
-                }
-
-                let mut updated_instance_info = instance_info;
-
-                if self.instance_players_vec_mapper(iid).len() == 0 {
-                    // No player, give prize back to instance sponsor
-                    updated_instance_info.winner_address =
-                    updated_instance_info.sponsor_address.clone();
-                } else {
-                    // Choose winner
-                    let seed = self.blockchain().get_block_random_seed_legacy();
-                    let mut rand = Random::new(*seed);
-                    let winning_address_index =
-                        (rand.next() as usize % self.instance_players_vec_mapper(iid).len()) + 1;
-                        updated_instance_info.winner_address = self
-                        .instance_players_vec_mapper(iid)
-                        .get(winning_address_index);
-                }
-
-                // Record winner address
-                self.instance_info_mapper()
-                    .insert(iid, updated_instance_info);
-            }
+        // Get instance info & data
+        let instance_info = self.instance_info_mapper().get(&iid).unwrap();
+        let mut instance_data = self.instance_data_mapper().get(&iid).unwrap();
+            
+        if (self.blockchain().get_caller() != instance_info.sponsor_info.address)
+            && (self.blockchain().get_caller() != self.blockchain().get_owner_address())
+        {
+            return sc_error!(
+                "Instance can only be triggered by its sponsor or by administrator"
+            );
         }
+
+        // Send rewards to sponsor
+        if instance_data.sponsor_rewards_pool > BigUint::zero() {
+
+            self.send().direct_egld(
+                &instance_info.sponsor_info.address,
+                &instance_data.sponsor_rewards_pool,
+                b"Sponsor rewards",
+            );
+        }
+
+        if self.instance_players_vec_mapper(iid).len() == 0 {
+            // No player, give prize back to instance sponsor
+            instance_data.winner_address = instance_info.sponsor_info.address.clone();
+        } 
+        else {
+            // Choose winner
+            let seed = self.blockchain().get_block_random_seed_legacy();
+            let mut rand = Random::new(*seed);
+            let winning_address_index = (rand.next() as usize % self.instance_players_vec_mapper(iid).len()) + 1;
+            instance_data.winner_address = self.instance_players_vec_mapper(iid).get(winning_address_index);
+        }
+
+        // Record winner address
+        self.instance_data_mapper().insert(iid, instance_data);      
 
         Ok(())
     }
@@ -238,16 +232,17 @@ pub trait Lottery {
 
         // Capitalize fees and set sponsor rewards
         if fees != BigUint::zero() {
-            let mut instance_info: InstanceInfo<Self::Api> = self.instance_info_mapper().get(&iid).unwrap();
+            let instance_info = self.instance_info_mapper().get(&iid).unwrap();
+            let mut instance_data = self.instance_data_mapper().get(&iid).unwrap();
 
             // Compute sponsor rewards
-            let sponsor_reward_percent:BigUint = BigUint::from(instance_info.sponsor_rewards.reward_percent);
+            let sponsor_reward_percent:BigUint = BigUint::from(instance_info.sponsor_info.reward_percent);
             let sponsor_reward_amount: BigUint = fees.clone() * sponsor_reward_percent / BigUint::from(100u8);
             let remaining_fees: BigUint = fees - sponsor_reward_amount.clone();
 
             // Add rewards to sponsor rewards pool
-            instance_info.sponsor_rewards.rewards_pool += sponsor_reward_amount;
-            self.instance_info_mapper().insert(iid, instance_info);
+            instance_data.sponsor_rewards_pool += sponsor_reward_amount;
+            self.instance_data_mapper().insert(iid, instance_data);
 
             // Add fees to pool
             self.fee_pool_mapper().update(|total_fees| *total_fees += remaining_fees);
@@ -267,31 +262,27 @@ pub trait Lottery {
             "Instance is not in the good state"
         );
 
-        // Get instance info
-        match self.instance_info_mapper().get(&iid) {
-            None => return sc_error!("Unexpected error"),
-            Some(instance_info) => {
-                // Check caller is the winner
-                if instance_info.winner_address != self.blockchain().get_caller() {
-                    return sc_error!("Prize can only be claimed by the winner");
-                }
+        // Get instance info & data
+        let instance_info = self.instance_info_mapper().get(&iid).unwrap();
+        let mut instance_data = self.instance_data_mapper().get(&iid).unwrap();
 
-                // Send prize to winner address
-                self.send().direct(
-                    &instance_info.winner_address,
-                    &instance_info.prize_info.token_identifier,
-                    instance_info.prize_info.token_nonce,
-                    &instance_info.prize_info.token_amount,
-                    b"Prize claimed",
-                );
-
-                // Update claimed status
-                let mut updated_instance_info = instance_info;
-                updated_instance_info.claimed_status = true;
-                self.instance_info_mapper()
-                    .insert(iid, updated_instance_info);
-            }
+        // Check caller is the winner
+        if instance_data.winner_address != self.blockchain().get_caller() {
+            return sc_error!("Prize can only be claimed by the winner");
         }
+
+        // Send prize to winner address
+        self.send().direct(
+            &instance_data.winner_address,
+            &instance_info.prize_info.token_identifier,
+            instance_info.prize_info.token_nonce,
+            &instance_info.prize_info.token_amount,
+            b"Prize claimed",
+        );
+
+        // Update claimed status
+        instance_data.claimed_status = true;
+        self.instance_data_mapper().insert(iid, instance_data);
 
         Ok(())
     }
@@ -314,19 +305,20 @@ pub trait Lottery {
 
     #[view(getStatus)]
     fn get_instance_status(&self, iid: u32) -> InstanceStatus {
-        // Retrieve instance information
-        let mapper_value = self.instance_info_mapper().get(&iid);
-
-        match mapper_value {
+        
+        // Compute instance status
+        match self.instance_data_mapper().get(&iid) {
             None => return InstanceStatus::NotExisting,
-            Some(instance_info) => {
+            Some(instance_data) => {
                 // Compute instance status based on fields values
-                if instance_info.claimed_status == true {
+                if instance_data.claimed_status == true {
                     return InstanceStatus::Claimed;
                 } else {
-                    if instance_info.winner_address != ManagedAddress::zero() {
+                    if instance_data.winner_address != ManagedAddress::zero() {
                         return InstanceStatus::Triggered;
                     } else {
+                        let instance_info = self.instance_info_mapper().get(&iid).unwrap();
+
                         if self.blockchain().get_block_timestamp() > instance_info.deadline {
                             return InstanceStatus::Ended;
                         } else {
@@ -339,10 +331,10 @@ pub trait Lottery {
     }
 
     #[view(getInfo)]
-    // Returns : (Result, optional (status, number of players, info)) of instance identified by iid provided  
-    fn get_instance_info(&self, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<MultiResult3<InstanceStatus, usize, InstanceInfo<Self::Api>>>> {
+    // Returns : (Result, optional (status, number of players, winner, info)) of instance identified by iid provided  
+    fn get_instance_info(&self, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<MultiResult4<InstanceStatus, usize, ManagedAddress, InstanceInfo<Self::Api>>>> {
         
-        let result: MultiResult2<SCResult<()>, OptionalResult<MultiResult3<InstanceStatus, usize, InstanceInfo<Self::Api>>>>;
+        let result: MultiResult2<SCResult<()>, OptionalResult<MultiResult4<InstanceStatus, usize, ManagedAddress, InstanceInfo<Self::Api>>>>;
 
         // Retrieve instance information
         match self.instance_info_mapper().get(&iid) {
@@ -354,12 +346,13 @@ pub trait Lottery {
                 ));
             }
             Some(instance_info) => {
-                // Instance found : return info, status and number of players
+                // Instance found : return status, number of players, winner and info
                 result = MultiArg2((
                     Ok(()),
-                    OptionalArg::Some(MultiArg3((
+                    OptionalArg::Some(MultiArg4((
                         self.get_instance_status(iid),
                         self.instance_players_set_mapper(iid).len(),
+                        self.instance_data_mapper().get(&iid).unwrap().winner_address,
                         instance_info))),
                 ));
             }
@@ -369,10 +362,10 @@ pub trait Lottery {
     }
             
     #[view(getAllInfo)]
-    // Returns : total number of filtered instances followed by, (ID, status, number of players, info) of all filtered instances
-    fn get_all_instance_info(&self, #[var_args] status_filter: VarArgs<InstanceStatus>) -> MultiArg2<usize, VarArgs<MultiArg4<u32, InstanceStatus, usize, InstanceInfo<Self::Api>>>> {
+    // Returns : total number of filtered instances followed by, (ID, status, number of players, winner, info) of all filtered instances
+    fn get_all_instance_info(&self, #[var_args] status_filter: VarArgs<InstanceStatus>) -> MultiArg2<usize, VarArgs<MultiArg5<u32, InstanceStatus, usize, ManagedAddress, InstanceInfo<Self::Api>>>> {
 
-        let mut instances: VarArgs<MultiArg4<u32, InstanceStatus, usize, InstanceInfo<Self::Api>>> = VarArgs::new();
+        let mut instances: VarArgs<MultiArg5<u32, InstanceStatus, usize, ManagedAddress, InstanceInfo<Self::Api>>> = VarArgs::new();
         let mut status_filter_vec = status_filter.clone().into_vec();
 
         // Ensure at least one status is provided as filter, check also overflow regarding the maximum possible values for status
@@ -386,10 +379,11 @@ pub trait Lottery {
             for iid in self.instance_info_mapper().keys() {
                 for status in status_filter_vec.iter() {
                     if self.get_instance_status(iid) == status.clone() {
-                        let result_vec_item = MultiArg4((
+                        let result_vec_item = MultiArg5((
                             iid,
                             self.get_instance_status(iid), 
                             self.instance_players_set_mapper(iid).len(),
+                            self.instance_data_mapper().get(&iid).unwrap().winner_address,
                             self.instance_info_mapper().get(&iid).unwrap(),
                         ));
                         instances.push(result_vec_item);
@@ -466,7 +460,7 @@ pub trait Lottery {
 
         // Return all instances IDs with sponsor address matching the one provided in parameter
         for instance in self.instance_info_mapper().iter() {
-            if instance.1.sponsor_address.clone() == sponsor_address {
+            if instance.1.sponsor_info.address.clone() == sponsor_address {
                 sponsor_iids.push(instance.0);
             }
         }
@@ -491,9 +485,7 @@ pub trait Lottery {
     #[view(hasPlayed)]
     fn has_played(&self, iid: u32, player_address: ManagedAddress) -> bool {
         // Return true is player_address provided in parameter is part of the SetMapper for the specified instance ID
-        return self
-            .instance_players_set_mapper(iid)
-            .contains(&player_address);
+        return self.instance_players_set_mapper(iid).contains(&player_address);
     }
 
     #[view(hasWon)]
@@ -501,15 +493,15 @@ pub trait Lottery {
 
         let result: MultiResult2<SCResult<()>, OptionalResult<bool>>;
 
-        // Retrieve instance information
-        match self.instance_info_mapper().get(&iid) {
+        // Retrieve instance data
+        match self.instance_data_mapper().get(&iid) {
             None => {
                 // Instance does not exist
                 result = MultiArg2((sc_error!("Instance does not exists"), OptionalResult::None));
             }
-            Some(instance_info) => {
+            Some(instance_data) => {
                 // Return true is player_address provided in parameter is the winner address for the specified instance ID
-                if instance_info.winner_address == player_address {
+                if instance_data.winner_address == player_address {
                     result = MultiArg2((Ok(()), OptionalResult::Some(true)));
                 }
                 else {
@@ -535,9 +527,11 @@ pub trait Lottery {
     #[storage_mapper("iid_counter")]
     fn iid_counter_mapper(&self) -> SingleValueMapper<u32>;
 
-    // Instance info
+    // Instance info & data
     #[storage_mapper("instance_info")]
     fn instance_info_mapper(&self) -> MapMapper<u32, InstanceInfo<Self::Api>>;
+    #[storage_mapper("instance_data")]
+    fn instance_data_mapper(&self) -> MapMapper<u32, InstanceData<Self::Api>>;
 
     // Instance players
     #[storage_mapper("instance_players_set")]
