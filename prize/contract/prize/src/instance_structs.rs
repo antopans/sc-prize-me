@@ -8,7 +8,6 @@ elrond_wasm::derive_imports!();
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct SponsorInfo<M: ManagedTypeApi> {
-    pub address: ManagedAddress<M>,
     pub pseudo: ManagedBuffer<M>,
     pub url: ManagedBuffer<M>,
     pub logo_link: ManagedBuffer<M>,
@@ -25,6 +24,7 @@ pub struct PrizeInfo<M: ManagedTypeApi> {
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct InstanceInfo<M: ManagedTypeApi> {
+    pub sponsor_address: ManagedAddress<M>,
     pub sponsor_info: SponsorInfo<M>,
     pub prize_info: PrizeInfo<M>,
     pub deadline: u64,
