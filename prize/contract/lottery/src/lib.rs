@@ -369,8 +369,8 @@ pub trait Lottery {
     }
             
     #[view(getAllInfo)]
-    // Returns : (ID, status, number of players, info) of all instances selected by the status filter provided  
-    fn get_all_instance_info(&self, #[var_args] status_filter: VarArgs<InstanceStatus>) -> VarArgs<MultiArg4<u32, InstanceStatus, usize, InstanceInfo<Self::Api>>> {
+    // Returns : total number of filtered instances followed by, (ID, status, number of players, info) of all filtered instances
+    fn get_all_instance_info(&self, #[var_args] status_filter: VarArgs<InstanceStatus>) -> MultiArg2<usize, VarArgs<MultiArg4<u32, InstanceStatus, usize, InstanceInfo<Self::Api>>>> {
 
         let mut instances: VarArgs<MultiArg4<u32, InstanceStatus, usize, InstanceInfo<Self::Api>>> = VarArgs::new();
         let mut status_filter_vec = status_filter.clone().into_vec();
@@ -399,7 +399,7 @@ pub trait Lottery {
             }
         }
 
-        return instances;
+        return MultiArg2((instances.len(), instances));
     }
 
     #[view(getRemainingTime)]
