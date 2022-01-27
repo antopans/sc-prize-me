@@ -27,6 +27,7 @@ pub enum InstanceStatus {
     Ended,
     Triggered,
     Claimed,
+    Disabled,
 }
 
 ////////////////////////////////////////////////////////////////////

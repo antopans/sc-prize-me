@@ -1,0 +1,30 @@
+{
+	"name": "disable endpoint bad caller",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "disable",
+			"comment": "non admin tries to call disable endpoint",
+			"tx": {
+				"from": "address:sponsorEGLD",
+				"to": "sc:prize",
+				"egldValue": "0",
+				"function": "disable",
+				"arguments": [
+					"1",
+					"1"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "4",
+				"message":"str:Caller address not allowed",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}

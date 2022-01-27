@@ -99,6 +99,35 @@ pub trait Prize {
         Ok(())
     }
 
+    #[endpoint(disable)]
+    fn disable_instance(&self, iid: u32, disable_status: bool) -> SCResult<()> {
+        only_owner!(self, "Caller address not allowed");
+
+        let result;
+        
+        // Retrieve instance data
+        match self.instance_data_mapper().get(&iid) {
+            None => {
+                // Instance does not exist
+                result = sc_error!("Instance does not exists");
+            }
+            Some(mut instance_data) => {
+                // Instance found : set disable status if different
+                if instance_data.disabled != disable_status {
+                    instance_data.disabled = disable_status;
+                    self.instance_data_mapper().insert(iid, instance_data);
+
+                    result = Ok(());
+                }
+                else{
+                    result = sc_error!("Instance already in the expected disable state");
+                }
+            }
+        }
+
+        return result;
+    }
+
     #[view(getFeePool)]
     fn get_fee_pool(&self) -> BigUint {
                
@@ -311,18 +340,22 @@ pub trait Prize {
             None => return InstanceStatus::NotExisting,
             Some(instance_data) => {
                 // Compute instance status based on fields values
-                if instance_data.claimed_status == true {
-                    return InstanceStatus::Claimed;
+                if instance_data.disabled == true {
+                    return InstanceStatus::Disabled;
                 } else {
-                    if instance_data.winner_address != ManagedAddress::zero() {
-                        return InstanceStatus::Triggered;
+                    if instance_data.claimed_status == true {
+                        return InstanceStatus::Claimed;
                     } else {
-                        let instance_info = self.instance_info_mapper().get(&iid).unwrap();
-
-                        if self.blockchain().get_block_timestamp() > instance_info.deadline {
-                            return InstanceStatus::Ended;
+                        if instance_data.winner_address != ManagedAddress::zero() {
+                            return InstanceStatus::Triggered;
                         } else {
-                            return InstanceStatus::Running;
+                            let instance_info = self.instance_info_mapper().get(&iid).unwrap();
+
+                            if self.blockchain().get_block_timestamp() > instance_info.deadline {
+                                return InstanceStatus::Ended;
+                            } else {
+                                return InstanceStatus::Running;
+                            }
                         }
                     }
                 }

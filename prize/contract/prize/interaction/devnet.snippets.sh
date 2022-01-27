@@ -57,6 +57,12 @@ claimFees() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="claimFees" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
+# Param1 : Instance ID
+# Param2 : disable status
+disable() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="disable" --arguments $1 $2 --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
  getFeePool() {
     erdpy --verbose contract query ${ADDRESS} --function="getFeePool" --proxy=${PROXY} 
 }
