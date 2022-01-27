@@ -129,6 +129,7 @@ pub trait Prize {
 
         // Fill sponsor information
         let sponsor_info = SponsorInfo {
+            address: self.blockchain().get_caller(),
             pseudo: pseudo,
             url: url,
             logo_link: logo_link,
@@ -146,7 +147,6 @@ pub trait Prize {
 
         // Aggregate instance information
         let instance_info = InstanceInfo {
-            sponsor_address: self.blockchain().get_caller(),
             sponsor_info: sponsor_info,
             prize_info: prize_info,
             deadline: deadline,
@@ -181,7 +181,7 @@ pub trait Prize {
         let instance_info = self.instance_info_mapper().get(&iid).unwrap();
         let mut instance_data = self.instance_data_mapper().get(&iid).unwrap();
             
-        if (self.blockchain().get_caller() != instance_info.sponsor_address)
+        if (self.blockchain().get_caller() != instance_info.sponsor_info.address)
             && (self.blockchain().get_caller() != self.blockchain().get_owner_address())
         {
             return sc_error!(
@@ -193,7 +193,7 @@ pub trait Prize {
         if instance_data.sponsor_rewards_pool > BigUint::zero() {
 
             self.send().direct_egld(
-                &instance_info.sponsor_address,
+                &instance_info.sponsor_info.address,
                 &instance_data.sponsor_rewards_pool,
                 b"Sponsor rewards",
             );
@@ -201,7 +201,7 @@ pub trait Prize {
 
         if self.instance_players_vec_mapper(iid).len() == 0 {
             // No player, give prize back to instance sponsor
-            instance_data.winner_address = instance_info.sponsor_address.clone();
+            instance_data.winner_address = instance_info.sponsor_info.address.clone();
         } 
         else {
             // Choose winner
@@ -460,7 +460,7 @@ pub trait Prize {
 
         // Return all instances IDs with sponsor address matching the one provided in parameter
         for instance in self.instance_info_mapper().iter() {
-            if instance.1.sponsor_address.clone() == sponsor_address {
+            if instance.1.sponsor_info.address.clone() == sponsor_address {
                 sponsor_iids.push(instance.0);
             }
         }
