@@ -5,11 +5,12 @@ elrond_wasm::imports!();
 mod common_types;
 mod random;
 
+use common_types::PrizeType;
+use common_types::InstanceStatus;
 use common_types::InstanceInfo;
 use common_types::InstanceData;
 use common_types::PrizeInfo;
 use common_types::SponsorInfo;
-use common_types::InstanceStatus;
 use common_types::FeePolicy;
 use random::Random;
 
@@ -137,6 +138,7 @@ pub trait Prize {
 
         // Fill prize information
         let prize_info = PrizeInfo {
+            prize_type: if token_identifier.is_egld() {PrizeType::EgldPrize} else if token_identifier.is_esdt() {PrizeType::EsdtPrize} else {PrizeType::UnknownPrize},
             token_identifier: token_identifier,
             token_nonce: token_nonce,
             token_amount: token_amount,
@@ -357,7 +359,7 @@ pub trait Prize {
         }
 
         return result;
-    }
+    }   
             
     #[view(getAllInfo)]
     // Returns : total number of filtered instances followed by, (ID, status, number of players, winner, info) of all filtered instances
