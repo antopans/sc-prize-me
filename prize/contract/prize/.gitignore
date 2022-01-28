@@ -8,6 +8,4 @@ output
 
 
 
-meta/Cargo.lock
-wasm/Cargo.lock
 wasm/src/
