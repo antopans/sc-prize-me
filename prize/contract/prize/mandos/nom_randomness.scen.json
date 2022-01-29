@@ -35,12 +35,18 @@
 			"path": "steps/time_management/egld_prize_forward_end_period.steps.json"
 		},
 		{
+			"step": "setState",
+			"currentBlockInfo": {
+				"blockRandomSeed": "0x000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000"
+			}
+		},
+		{
 			"step": "externalSteps",
 			"path": "steps/sponsor_actions/sponsorEGLD_triggers_egld_prize.steps.json"
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/query_hasWon/player1_hasWon_egld_prize_true.steps.json"
+			"path": "steps/query_hasWon/player5_hasWon_egld_prize_true.steps.json"
 		},
 
 
@@ -73,12 +79,18 @@
 			"path": "steps/time_management/esdt_prize_forward_end_period.steps.json"
 		},
 		{
+			"step": "setState",
+			"currentBlockInfo": {
+				"blockRandomSeed": "0x000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000"
+			}
+		},
+		{
 			"step": "externalSteps",
 			"path": "steps/sponsor_actions/sponsorESDT_triggers_esdt_prize.steps.json"
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/query_hasWon/player2_hasWon_esdt_prize_true.steps.json"
+			"path": "steps/query_hasWon/player3_hasWon_esdt_prize_true.steps.json"
 		},
 
 
@@ -113,12 +125,18 @@
 			"path": "steps/time_management/nft_prize_forward_end_period.steps.json"
 		},
 		{
+			"step": "setState",
+			"currentBlockInfo": {
+				"blockRandomSeed": "0x000000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+			}
+		},
+		{
 			"step": "externalSteps",
 			"path": "steps/sponsor_actions/sponsorNFT_triggers_nft_prize.steps.json"
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/query_hasWon/player3_hasWon_nft_prize_true.steps.json"
+			"path": "steps/query_hasWon/player1_hasWon_nft_prize_true.steps.json"
 		},
 		
 
@@ -152,12 +170,18 @@
 			"path": "steps/time_management/sft_prize_forward_end_period.steps.json"
 		},
 		{
+			"step": "setState",
+			"currentBlockInfo": {
+				"blockRandomSeed": "0x000000000000000070000000000000000000000000000000000000000000000000000000000000000000000000000000"
+			}
+		},
+		{
 			"step": "externalSteps",
 			"path": "steps/sponsor_actions/sponsorSFT_triggers_sft_prize.steps.json"
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/query_hasWon/player1_hasWon_sft_prize_true.steps.json"
+			"path": "steps/query_hasWon/player2_hasWon_sft_prize_true.steps.json"
 		}
 	]
 }

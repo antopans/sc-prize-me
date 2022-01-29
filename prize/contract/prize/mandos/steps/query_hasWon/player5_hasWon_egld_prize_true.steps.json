@@ -1,16 +1,16 @@
 {
-	"name": "hasWon query player1 on sft prize; result expected : true",
+	"name": "hasWon query player5 on egld prize; result expected : true",
 	"steps": [
 		{
             "step": "scQuery",
-            "txId": "has_won_player_1_4_true",
+            "txId": "has_won_player_5_1_true",
             "comment": "expected result : true",
             "tx": {
                 "to": "sc:prize",
                 "function": "hasWon",
                 "arguments": [
-                    "4",
-                    "address:player1"
+                    "1",
+                    "address:player5"
                 ]
             },
             "expect": {
