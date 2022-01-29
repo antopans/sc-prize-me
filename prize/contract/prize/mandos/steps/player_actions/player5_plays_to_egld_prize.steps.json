@@ -1,0 +1,28 @@
+{
+	"name": "player5 plays egld prize",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "player5_play_egld_prize",
+			"comment": "Player5 plays to EGLD prize",
+			"tx": {
+				"from": "address:player5",
+				"to": "sc:prize",
+				"egldValue": "0",
+				"function": "play",
+				"arguments": [
+					"1"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "0",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}

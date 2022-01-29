@@ -3,7 +3,6 @@
 elrond_wasm::imports!();
 
 mod common_types;
-mod random;
 
 use common_types::PrizeType;
 use common_types::InstanceStatus;
@@ -12,7 +11,6 @@ use common_types::InstanceData;
 use common_types::PrizeInfo;
 use common_types::SponsorInfo;
 use common_types::FeePolicy;
-use random::Random;
 
 
 #[elrond_wasm::contract]
@@ -205,7 +203,7 @@ pub trait Prize {
             self.get_instance_status(iid) == InstanceStatus::Ended,
             "Instance is not in the good state"
         );
-
+        
         // Get instance info & data
         let instance_info = self.instance_info_mapper().get(&iid).unwrap();
         let mut instance_data = self.instance_data_mapper().get(&iid).unwrap();
@@ -234,9 +232,8 @@ pub trait Prize {
         } 
         else {
             // Choose winner
-            let seed = self.blockchain().get_block_random_seed_legacy();
-            let mut rand = Random::new(*seed);
-            let winning_address_index = (rand.next() as usize % self.instance_players_vec_mapper(iid).len()) + 1;
+            let mut rand = RandomnessSource::<Self::Api>::new();       
+            let winning_address_index = rand.next_usize_in_range(1, self.instance_players_vec_mapper(iid).len() + 1);
             instance_data.winner_address = self.instance_players_vec_mapper(iid).get(winning_address_index);
         }
 
