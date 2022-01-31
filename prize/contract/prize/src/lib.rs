@@ -141,13 +141,12 @@ pub trait Prize {
     #[payable("*")]
     #[endpoint(create)]
     fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
-        
-        let result;
 
         // Check validity of parameters
         if duration_in_s == 0 {
-            result = MultiArg2((sc_error!("duration cannot be null"), OptionalResult::None));
-            return result;
+            return MultiArg2((sc_error!("duration cannot be null"), OptionalResult::None));
+        }else if token_amount == 0 {
+            return MultiArg2((sc_error!("Prize cannot be null"), OptionalResult::None));
         }
 
         // Compute next iid
@@ -200,8 +199,7 @@ pub trait Prize {
         self.iid_counter_mapper().set(&new_iid);
 
         // Format result
-        result = MultiArg2((Ok(()), OptionalResult::Some(new_iid)));
-        return result;
+        return MultiArg2((Ok(()), OptionalResult::Some(new_iid)));
     }
 
     #[endpoint(trigger)]
