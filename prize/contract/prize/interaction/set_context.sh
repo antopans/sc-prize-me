@@ -4,17 +4,17 @@
 source ./interaction/devnet.wallets.sh
 
 #Create 4 instances
-source ./interaction/devnet.snippets.sh; create 60 $SPONSOR1
+source ./interaction/devnet.snippets.sh; createEgld 60 $SPONSOR1
 sleep 5
 
-source ./interaction/devnet.snippets.sh; create 60 $SPONSOR2
+source ./interaction/devnet.snippets.sh; createEgld 60 $SPONSOR2
 sleep 5
 
-source ./interaction/devnet.snippets.sh; create 60 $SPONSOR3
+source ./interaction/devnet.snippets.sh; createEgld 60 $SPONSOR3
 sleep 5
 
 # 24h
-source ./interaction/devnet.snippets.sh; create 86400 $SPONSOR4
+source ./interaction/devnet.snippets.sh; createEgld 86400 $SPONSOR4
 sleep 5
 
 
