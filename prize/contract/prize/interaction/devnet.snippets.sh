@@ -1,5 +1,6 @@
 #!/bin/bash
 SCRIPT_PATH=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+BECH32_UTIL="bech32_util/bech32_2_hex.py"
 BYTECODE="output/prize.wasm"
 ADDRESS=$(erdpy data load --key=address-devnet)
 DEPLOY_TRANSACTION=$(erdpy data load --key=deployTransaction-devnet)
@@ -107,7 +108,7 @@ createEsdt() {
 # Param #5 : Token amount
 createNft() {
     BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $2`    
-    SC_HEX_ADDRESS=`${SCRIPT_PATH}/bech32_2_hex.py $ADDRESS`
+    SC_HEX_ADDRESS=`${SCRIPT_PATH}/${BECH32_UTIL} $ADDRESS`
 
     SC_FUNCTION="$(xxd -pu -c 256 <<< "create")"
     DURATION=`printf "%02X" $1`; if [ $(expr ${#DURATION} % 2) != "0" ]; then DURATION="0${DURATION}"; fi
@@ -205,7 +206,7 @@ getIDs() {
 # Param1 : Sponsor pem wallet 
 getSponsorIDs() {
     BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $1`    
-    SPONSOR_HEX_ADDRESS=`${SCRIPT_PATH}/bech32_2_hex.py $BECH32_PEM_WALLET`
+    SPONSOR_HEX_ADDRESS=`${SCRIPT_PATH}/${BECH32_UTIL} $BECH32_PEM_WALLET`
     
     erdpy --verbose contract query ${ADDRESS} --function="getSponsorIDs" --arguments "0x${SPONSOR_HEX_ADDRESS}" --proxy=${PROXY} 
 }
@@ -213,7 +214,7 @@ getSponsorIDs() {
 # Param1 : Player pem wallet
 getPlayerIDs() {
     BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $1`    
-    PLAYER_HEX_ADDRESS=`${SCRIPT_PATH}/bech32_2_hex.py $BECH32_PEM_WALLET`
+    PLAYER_HEX_ADDRESS=`${SCRIPT_PATH}/${BECH32_UTIL}$BECH32_PEM_WALLET`
 
     erdpy --verbose contract query ${ADDRESS} --function="getPlayerIDs" --arguments "0x${PLAYER_HEX_ADDRESS}" --proxy=${PROXY} 
 }
@@ -222,7 +223,7 @@ getPlayerIDs() {
 # Param2 : Player pem wallet
 hasPlayed() {
     BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $2`    
-    PLAYER_HEX_ADDRESS=`${SCRIPT_PATH}/bech32_2_hex.py $BECH32_PEM_WALLET`
+    PLAYER_HEX_ADDRESS=`${SCRIPT_PATH}/${BECH32_UTIL} $BECH32_PEM_WALLET`
 
     erdpy --verbose contract query ${ADDRESS} --function="hasPlayed" --arguments $1 "0x${PLAYER_HEX_ADDRESS}" --proxy=${PROXY} 
 }
@@ -231,7 +232,7 @@ hasPlayed() {
 # Param2 : Player pem wallet
 hasWon() {
     BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $2`    
-    PLAYER_HEX_ADDRESS=`${SCRIPT_PATH}/bech32_2_hex.py $BECH32_PEM_WALLET`
+    PLAYER_HEX_ADDRESS=`${SCRIPT_PATH}/${BECH32_UTIL} $BECH32_PEM_WALLET`
 
     erdpy --verbose contract query ${ADDRESS} --function="hasWon" --arguments $1 "0x${PLAYER_HEX_ADDRESS}" --proxy=${PROXY} 
 }
