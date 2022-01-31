@@ -20,7 +20,7 @@ pub enum PrizeType {
     UnknownPrize,
 }
 
-#[derive(TopEncode, TopDecode, TypeAbi, PartialEq, Clone, Copy, VariantCount, Ord, PartialOrd, Eq)]
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi, PartialEq, Clone, Copy, VariantCount, Ord, PartialOrd, Eq)]
 pub enum InstanceStatus {
     NotExisting,
     Running,
@@ -34,6 +34,7 @@ pub enum InstanceStatus {
 // Structures
 ////////////////////////////////////////////////////////////////////
 
+// Information filled at instance creation
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct SponsorInfo<M: ManagedTypeApi> {
     pub address: ManagedAddress<M>,
@@ -53,16 +54,17 @@ pub struct PrizeInfo<M: ManagedTypeApi> {
 }
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
-pub struct WinnerInfo<M: ManagedTypeApi> {
-    pub ticket_number: usize,
-    pub address: ManagedAddress<M>,
-}
-
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct InstanceInfo<M: ManagedTypeApi> {
     pub sponsor_info: SponsorInfo<M>,
     pub prize_info: PrizeInfo<M>,
     pub deadline: u64,
+}
+
+// State of instance, content depends on instance lifecycle
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
+pub struct WinnerInfo<M: ManagedTypeApi> {
+    pub ticket_number: usize,
+    pub address: ManagedAddress<M>,
 }
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
@@ -73,9 +75,21 @@ pub struct InstanceState<M: ManagedTypeApi> {
     pub disabled: bool,
 }
 
+// Fee policy
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct FeePolicy<M: ManagedTypeApi> {
     pub fee_amount_egld: BigUint<M>,
     pub sponsor_reward_percent: u8,
 }
 
+// data format for endpoint return
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
+pub struct GetInfoStruct<M: ManagedTypeApi> {
+    pub iid: u32,
+    pub instance_status: InstanceStatus,
+    pub number_of_players: usize,
+    pub winner_info: WinnerInfo<M>,
+    pub sponsor_info: SponsorInfo<M>,
+    pub prize_info: PrizeInfo<M>,
+    pub deadline: u64,
+}

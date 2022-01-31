@@ -178,6 +178,16 @@ getAllInfo() {
 }
 
 # Param1 : Instance ID
+getInfoLegacy() {
+    erdpy --verbose contract query ${ADDRESS} --function="getInfoLegacy" --arguments $1 --proxy=${PROXY} 
+}
+
+# Var params : Instance status filter (from 1 to 5 status can be provided)
+getAllInfoLegacy() {
+    erdpy --verbose contract query ${ADDRESS} --function="getAllInfoLegacy" --arguments $* --proxy=${PROXY} 
+}
+
+# Param1 : Instance ID
 getRemainingTime() {
     erdpy --verbose contract query ${ADDRESS} --function="getRemainingTime" --arguments $1 --proxy=${PROXY} 
 }

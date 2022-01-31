@@ -12,6 +12,7 @@ use common_types::PrizeInfo;
 use common_types::WinnerInfo;
 use common_types::SponsorInfo;
 use common_types::FeePolicy;
+use common_types::GetInfoStruct;
 
 
 #[elrond_wasm::contract]
@@ -374,11 +375,11 @@ pub trait Prize {
         }
     }
 
-    #[view(getInfo)]
-    // Returns : (Result, optional (status, number of players, winner info, instance info)) of instance identified by iid provided  
-    fn get_instance_info(&self, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<MultiResult4<InstanceStatus, usize, WinnerInfo<Self::Api>, InstanceInfo<Self::Api>>>> {
+    #[view(getInfoLegacy)]
+    // Returns : (Result, optional (status, number of players, winner address, instance info)) of instance identified by iid provided  
+    fn get_instance_info_legacy(&self, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<MultiResult4<InstanceStatus, usize, ManagedAddress, InstanceInfo<Self::Api>>>> {
         
-        let result: MultiResult2<SCResult<()>, OptionalResult<MultiResult4<InstanceStatus, usize, WinnerInfo<Self::Api>, InstanceInfo<Self::Api>>>>;
+        let result: MultiResult2<SCResult<()>, OptionalResult<MultiResult4<InstanceStatus, usize, ManagedAddress, InstanceInfo<Self::Api>>>>;
 
         // Retrieve instance information
         match self.instance_info_mapper().get(&iid) {
@@ -396,7 +397,7 @@ pub trait Prize {
                     OptionalArg::Some(MultiArg4((
                         self.get_instance_status(iid),
                         self.instance_players_set_mapper(iid).len(),
-                        self.instance_state_mapper().get(&iid).unwrap().winner_info,
+                        self.instance_state_mapper().get(&iid).unwrap().winner_info.address,
                         instance_info))),
                 ));
             }
@@ -405,11 +406,11 @@ pub trait Prize {
         return result;
     }   
             
-    #[view(getAllInfo)]
-    // Returns : total number of filtered instances followed by, (ID, status, number of players, winner info, instance info) of all filtered instances
-    fn get_all_instance_info(&self, #[var_args] status_filter: VarArgs<InstanceStatus>) -> MultiArg2<usize, VarArgs<MultiArg5<u32, InstanceStatus, usize, WinnerInfo<Self::Api>, InstanceInfo<Self::Api>>>> {
+    #[view(getAllInfoLegacy)]
+    // Returns : total number of filtered instances followed by, (ID, status, number of players, winner address, instance info) of all filtered instances
+    fn get_all_instance_info_legacy(&self, #[var_args] status_filter: VarArgs<InstanceStatus>) -> MultiArg2<usize, VarArgs<MultiArg5<u32, InstanceStatus, usize, ManagedAddress, InstanceInfo<Self::Api>>>> {
 
-        let mut instances: VarArgs<MultiArg5<u32, InstanceStatus, usize, WinnerInfo<Self::Api>, InstanceInfo<Self::Api>>> = VarArgs::new();
+        let mut instances: VarArgs<MultiArg5<u32, InstanceStatus, usize, ManagedAddress, InstanceInfo<Self::Api>>> = VarArgs::new();
         let mut status_filter_vec = status_filter.clone().into_vec();
 
         // Ensure at least one status is provided as filter, check also overflow regarding the maximum possible values for status
@@ -427,10 +428,74 @@ pub trait Prize {
                             iid,
                             self.get_instance_status(iid), 
                             self.instance_players_set_mapper(iid).len(),
-                            self.instance_state_mapper().get(&iid).unwrap().winner_info,
+                            self.instance_state_mapper().get(&iid).unwrap().winner_info.address,
                             self.instance_info_mapper().get(&iid).unwrap(),
                         ));
                         instances.push(result_vec_item);
+                        break;
+                    }   
+                }
+            }
+        }
+
+        return MultiArg2((instances.len(), instances));
+    }
+
+    #[view(getInfo)]
+    fn get_instance_info(&self, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<GetInfoStruct<Self::Api>>> {
+        
+        let result: MultiResult2<SCResult<()>, OptionalResult<GetInfoStruct<Self::Api>>>;
+
+        // Retrieve instance information
+        match self.instance_info_mapper().get(&iid) {
+            None => {
+                // Instance does not exist
+                result = MultiArg2((
+                    sc_error!("Instance does not exists"),
+                    OptionalArg::None,
+                ));
+            }
+            Some(instance_info) => {
+                // Instance found, fill return struct
+                let get_info_struct = GetInfoStruct {
+                    iid: iid,
+                    instance_status: self.get_instance_status(iid),
+                    number_of_players: self.instance_players_set_mapper(iid).len(),
+                    winner_info: self.instance_state_mapper().get(&iid).unwrap().winner_info,
+                    sponsor_info: instance_info.sponsor_info,
+                    prize_info: instance_info.prize_info,
+                    deadline: instance_info.deadline,
+                };
+
+                result = MultiArg2((
+                    Ok(()),
+                    OptionalArg::Some(get_info_struct),
+                ));
+            }
+        }
+
+        return result;
+    }   
+            
+    #[view(getAllInfo)]
+    // Returns : total number of filtered instances followed by information of all filtered instances
+    fn get_all_instance_info(&self, #[var_args] status_filter: VarArgs<InstanceStatus>) -> MultiArg2<usize, VarArgs<GetInfoStruct<Self::Api>>> {
+
+        let mut instances: VarArgs<GetInfoStruct<Self::Api>> = VarArgs::new();
+        let mut status_filter_vec = status_filter.clone().into_vec();
+
+        // Ensure at least one status is provided as filter, check also overflow regarding the maximum possible values for status
+        if status_filter.len() >= 1 && status_filter.len() <= InstanceStatus::VARIANT_COUNT {
+
+            // Remove duplicates
+            status_filter_vec.sort();
+            status_filter_vec.dedup();
+
+            // Return all instances IDs which meet the status filter provided in parameter
+            for iid in self.instance_info_mapper().keys() {
+                for status in status_filter_vec.iter() {
+                    if self.get_instance_status(iid) == status.clone() {
+                        instances.push(self.get_instance_info(iid).0.1.into_option().unwrap());
                         break;
                     }   
                 }
