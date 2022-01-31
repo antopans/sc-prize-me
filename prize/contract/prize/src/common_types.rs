@@ -66,7 +66,7 @@ pub struct InstanceInfo<M: ManagedTypeApi> {
 }
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
-pub struct InstanceData<M: ManagedTypeApi> {
+pub struct InstanceState<M: ManagedTypeApi> {
     pub sponsor_rewards_pool: BigUint<M>,
     pub claimed_status: bool,
     pub winner_info: WinnerInfo<M>,
