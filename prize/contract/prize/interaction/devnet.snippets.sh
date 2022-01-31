@@ -41,9 +41,10 @@ cleanClaimed() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="cleanClaimed" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
-# Param1 : fees amount
-setFees() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setFees" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
+# Param1 : fees amount in EGLD
+# Param2 : sponsor reward in percent
+setFeePol() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setFeePol" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 claimFees() {
@@ -82,8 +83,7 @@ createEgld() {
 # Param #4 : Token amount
 createEsdt() {
     SC_FUNCTION="$(xxd -pu -c 256 <<< "create")"
-    DURATION=`printf "%02X" $1`
-    if [ $(expr ${#DURATION} % 2) != "0" ]; then DURATION="0${DURATION}"; fi
+    DURATION=`printf "%02X" $1`; if [ $(expr ${#DURATION} % 2) != "0" ]; then DURATION="0${DURATION}"; fi
     PSEUDO="$(xxd -pu -c 256 <<< "Holoride")"
     URL="$(xxd -pu -c 256  <<< "https://www.holoride.com/")"
     LOGO_LINK="$(xxd -pu -c 256  <<< "https://img2.storyblok.com/1440x0/smart/filters:format(webp)/f/113424/1920x1080/af849350b2/ride-token.png")"
@@ -91,8 +91,7 @@ createEsdt() {
     TX_SC_CREATE_DATA="${SC_FUNCTION::-2}@${DURATION}@${PSEUDO}@${URL}@${LOGO_LINK}@${FREE_TEXT}"
     
     TOKEN_ID="$(xxd -pu -c 256  <<< $3)"
-    TOKEN_AMOUNT=`printf "%02X" $4`
-    if [ $(expr ${#TOKEN_AMOUNT} % 2) != "0" ]; then TOKEN_AMOUNT="0${TOKEN_AMOUNT}"; fi
+    TOKEN_AMOUNT=`printf "%02X" $4`; if [ $(expr ${#TOKEN_AMOUNT} % 2) != "0" ]; then TOKEN_AMOUNT="0${TOKEN_AMOUNT}"; fi
 
     TX_TOKEN_DATA="ESDTTransfer@${TOKEN_ID::-2}@${TOKEN_AMOUNT}"    
 
@@ -111,8 +110,7 @@ createNft() {
     SC_HEX_ADDRESS=`${SCRIPT_PATH}/bech32_2_hex.py $ADDRESS`
 
     SC_FUNCTION="$(xxd -pu -c 256 <<< "create")"
-    DURATION=`printf "%02X" $1`
-    if [ $(expr ${#DURATION} % 2) != "0" ]; then DURATION="0${DURATION}"; fi
+    DURATION=`printf "%02X" $1`; if [ $(expr ${#DURATION} % 2) != "0" ]; then DURATION="0${DURATION}"; fi
     PSEUDO="$(xxd -pu -c 256 <<< "E-MOON")"
     URL="$(xxd -pu -c 256  <<< "https://emoon.space/")"
     LOGO_LINK="$(xxd -pu -c 256  <<< "https://media.heartlandtv.com/images/HARVEST+MOON+SD.jpg")"
@@ -121,8 +119,7 @@ createNft() {
     
     TOKEN_ID="$(xxd -pu -c 256  <<< $3)"
     TOKEN_NONCE=`printf "%02X" $4`
-    TOKEN_AMOUNT=`printf "%02X" $5`
-    if [ $(expr ${#TOKEN_AMOUNT} % 2) != "0" ]; then TOKEN_AMOUNT="0${TOKEN_AMOUNT}"; fi
+    TOKEN_AMOUNT=`printf "%02X" $5`; if [ $(expr ${#TOKEN_AMOUNT} % 2) != "0" ]; then TOKEN_AMOUNT="0${TOKEN_AMOUNT}"; fi
     TX_TOKEN_DATA="ESDTNFTTransfer@${TOKEN_ID::-2}@${TOKEN_NONCE}@${TOKEN_AMOUNT}@${SC_HEX_ADDRESS}"    
 
     TX_DATA="${TX_TOKEN_DATA}@${TX_SC_CREATE_DATA}"  
@@ -195,28 +192,36 @@ getIDs() {
     erdpy --verbose contract query ${ADDRESS} --function="getIDs" --arguments $* --proxy=${PROXY} 
 }
 
-# Param1 : Sponsor address in HEX format (not string2hex but Bech32 to hex => http://207.244.241.38/elrond-converters/#bech32-to-hex ; advise: use AddressValue class in erdjs)
+# Param1 : Sponsor pem wallet 
 getSponsorIDs() {
-    # Example : "0xe56d37eda19cd48ca0a9bcfd86bddadd61ed7bdd311e9d056e3984a6d6c6205f" to pass bech32 address erd1u4kn0mdpnn2geg9fhn7cd0w6m4s7677axy0f6ptw8xz2d4kxyp0sgynsls
-    erdpy --verbose contract query ${ADDRESS} --function="getSponsorIDs" --arguments $1 --proxy=${PROXY} 
+    BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $1`    
+    SPONSOR_HEX_ADDRESS=`${SCRIPT_PATH}/bech32_2_hex.py $BECH32_PEM_WALLET`
+    
+    erdpy --verbose contract query ${ADDRESS} --function="getSponsorIDs" --arguments "0x${SPONSOR_HEX_ADDRESS}" --proxy=${PROXY} 
 }
 
-# Param1 : Player address in HEX format (not string2hex but Bech32 to hex => http://207.244.241.38/elrond-converters/#bech32-to-hex ; advise: use AddressValue class in erdjs)
+# Param1 : Player pem wallet
 getPlayerIDs() {
-    # Example : "0xe56d37eda19cd48ca0a9bcfd86bddadd61ed7bdd311e9d056e3984a6d6c6205f" to pass bech32 address erd1u4kn0mdpnn2geg9fhn7cd0w6m4s7677axy0f6ptw8xz2d4kxyp0sgynsls
-    erdpy --verbose contract query ${ADDRESS} --function="getPlayerIDs" --arguments $1 --proxy=${PROXY} 
+    BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $1`    
+    PLAYER_HEX_ADDRESS=`${SCRIPT_PATH}/bech32_2_hex.py $BECH32_PEM_WALLET`
+
+    erdpy --verbose contract query ${ADDRESS} --function="getPlayerIDs" --arguments "0x${PLAYER_HEX_ADDRESS}" --proxy=${PROXY} 
 }
 
 # Param1 : Instance ID
-# Param2 : Player address in HEX format (not string2hex but Bech32 to hex => http://207.244.241.38/elrond-converters/#bech32-to-hex ; advise: use AddressValue class in erdjs)
+# Param2 : Player pem wallet
 hasPlayed() {
-    # Example : "0xe56d37eda19cd48ca0a9bcfd86bddadd61ed7bdd311e9d056e3984a6d6c6205f" to pass bech32 address erd1u4kn0mdpnn2geg9fhn7cd0w6m4s7677axy0f6ptw8xz2d4kxyp0sgynsls
-    erdpy --verbose contract query ${ADDRESS} --function="hasPlayed" --arguments $1 $2 --proxy=${PROXY} 
+    BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $2`    
+    PLAYER_HEX_ADDRESS=`${SCRIPT_PATH}/bech32_2_hex.py $BECH32_PEM_WALLET`
+
+    erdpy --verbose contract query ${ADDRESS} --function="hasPlayed" --arguments $1 "0x${PLAYER_HEX_ADDRESS}" --proxy=${PROXY} 
 }
 
 # Param1 : Instance ID
-# Param2 : Player address in HEX format (not string2hex but Bech32 to hex => http://207.244.241.38/elrond-converters/#bech32-to-hex ; advise: use AddressValue class in erdjs)
+# Param2 : Player pem wallet
 hasWon() {
-    # Example : "0xe56d37eda19cd48ca0a9bcfd86bddadd61ed7bdd311e9d056e3984a6d6c6205f" to pass bech32 address erd1u4kn0mdpnn2geg9fhn7cd0w6m4s7677axy0f6ptw8xz2d4kxyp0sgynsls
-    erdpy --verbose contract query ${ADDRESS} --function="hasWon" --arguments $1 $2 --proxy=${PROXY} 
+    BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $2`    
+    PLAYER_HEX_ADDRESS=`${SCRIPT_PATH}/bech32_2_hex.py $BECH32_PEM_WALLET`
+
+    erdpy --verbose contract query ${ADDRESS} --function="hasWon" --arguments $1 "0x${PLAYER_HEX_ADDRESS}" --proxy=${PROXY} 
 }

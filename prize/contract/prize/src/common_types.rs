@@ -53,6 +53,12 @@ pub struct PrizeInfo<M: ManagedTypeApi> {
 }
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
+pub struct WinnerInfo<M: ManagedTypeApi> {
+    pub ticket_number: usize,
+    pub address: ManagedAddress<M>,
+}
+
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct InstanceInfo<M: ManagedTypeApi> {
     pub sponsor_info: SponsorInfo<M>,
     pub prize_info: PrizeInfo<M>,
@@ -63,7 +69,7 @@ pub struct InstanceInfo<M: ManagedTypeApi> {
 pub struct InstanceData<M: ManagedTypeApi> {
     pub sponsor_rewards_pool: BigUint<M>,
     pub claimed_status: bool,
-    pub winner_address: ManagedAddress<M>,
+    pub winner_info: WinnerInfo<M>,
     pub disabled: bool,
 }
 
