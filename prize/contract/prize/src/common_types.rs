@@ -75,13 +75,6 @@ pub struct InstanceState<M: ManagedTypeApi> {
     pub disabled: bool,
 }
 
-// Fee policy
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
-pub struct FeePolicy<M: ManagedTypeApi> {
-    pub fee_amount_egld: BigUint<M>,
-    pub sponsor_reward_percent: u8,
-}
-
 // data format for endpoint return
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct GetInfoStruct<M: ManagedTypeApi> {

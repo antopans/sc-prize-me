@@ -2,16 +2,24 @@
 
 elrond_wasm::imports!();
 
+// Modules
+mod security;
+mod parameter;
+mod fee;
+
+// Types
 mod common_types;
 use common_types::*;
+use fee::FeePolicy;
 
-#[macro_use]
+// Macros
 mod macros;
 
-
-
 #[elrond_wasm::contract]
-pub trait Prize {
+pub trait Prize: 
+    security::SecurityModule 
+    +parameter::ParameterModule
+    +fee::FeeModule {
     
     /////////////////////////////////////////////////////////////////////
     // SC Management API
@@ -23,12 +31,10 @@ pub trait Prize {
         // Initializations @ deployment only 
         self.iid_counter_mapper().set_if_empty(&0u32);
         self.fee_pool_mapper().set_if_empty(&BigUint::zero());
-
-        let default_fee_policy = FeePolicy {
+        self.fee_policy_mapper().set_if_empty(&FeePolicy {
             fee_amount_egld : BigUint::zero(),
             sponsor_reward_percent : 0u8,
-        };
-        self.fee_policy_mapper().set_if_empty(&default_fee_policy);
+        });
 
         Ok(())
     }
@@ -64,35 +70,7 @@ pub trait Prize {
         }
 
         Ok(())
-    }
-
-    #[endpoint(setFeePol)]
-    fn set_fee_policy(&self, fee_amount_egld: BigUint, sponsor_reward_percent: u8) -> SCResult<()> {
-        only_owner!(self, "Caller address not allowed");
-        require!(sponsor_reward_percent <= 100, "Wrong value for sponsor reward");
-
-        // Save fee policy
-        let fee_policy = FeePolicy {
-            fee_amount_egld : fee_amount_egld,
-            sponsor_reward_percent : sponsor_reward_percent,
-        };
-
-        self.fee_policy_mapper().set(&fee_policy); 
-
-        Ok(())
-    }
-
-    #[endpoint(claimFees)]
-    fn claim_fees(&self) -> SCResult<()> {
-        only_owner!(self, "Caller address not allowed");
-        require!(self.fee_pool_mapper().get() != BigUint::zero(), "No fees to claim");
-        
-        // Claim fees and clear the pool
-        self.send().direct_egld(&self.blockchain().get_owner_address(), &self.fee_pool_mapper().get(), b"Fees from pool claimed");
-        self.fee_pool_mapper().clear();
-
-        Ok(())
-    }
+    }  
 
     #[endpoint(disable)]
     fn disable_instance(&self, iid: u32, disable_status: bool) -> SCResult<()> {
@@ -113,12 +91,7 @@ pub trait Prize {
         }
     }
 
-    #[view(getFeePool)]
-    fn get_fee_pool(&self) -> BigUint {
-               
-        // Get the current amount of fees in the pool
-        return self.fee_pool_mapper().get(); 
-    }
+    
 
     /////////////////////////////////////////////////////////////////////
     // DApp endpoints : sponsor API
@@ -294,13 +267,6 @@ pub trait Prize {
     /////////////////////////////////////////////////////////////////////
     // DApp view API
     /////////////////////////////////////////////////////////////////////
-
-    #[view(getFeePol)]
-    fn get_fee_policy(&self) -> MultiResult2<BigUint, u8> {        
-        let current_fee_policy: FeePolicy<Self::Api> = self.fee_policy_mapper().get();
-
-        return MultiArg2((current_fee_policy.fee_amount_egld, current_fee_policy.sponsor_reward_percent)); 
-    }
 
     #[view(getNb)]
     fn get_nb_instances(&self) -> u32 {
@@ -531,12 +497,6 @@ pub trait Prize {
     /////////////////////////////////////////////////////////////////////
     // Mappers
     /////////////////////////////////////////////////////////////////////
-
-    // Fees
-    #[storage_mapper("fee_policy")]
-    fn fee_policy_mapper(&self) -> SingleValueMapper<FeePolicy<Self::Api>>;
-    #[storage_mapper("fee_pool")]
-    fn fee_pool_mapper(&self) -> SingleValueMapper<BigUint>;
 
     // Instance counter
     #[storage_mapper("iid_counter")]
