@@ -5,6 +5,11 @@ elrond_wasm::imports!();
 mod common_types;
 use common_types::*;
 
+#[macro_use]
+mod macros;
+
+
+
 #[elrond_wasm::contract]
 pub trait Prize {
     
@@ -92,30 +97,20 @@ pub trait Prize {
     #[endpoint(disable)]
     fn disable_instance(&self, iid: u32, disable_status: bool) -> SCResult<()> {
         only_owner!(self, "Caller address not allowed");
-
-        let result;
+        require!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
         
         // Retrieve instance state
-        match self.instance_state_mapper().get(&iid) {
-            None => {
-                // Instance does not exist
-                result = sc_error!("Instance does not exists");
-            }
-            Some(mut instance_state) => {
-                // Instance found : set disable status if different
-                if instance_state.disabled != disable_status {
-                    instance_state.disabled = disable_status;
-                    self.instance_state_mapper().insert(iid, instance_state);
+        let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
+        
+        if instance_state.disabled != disable_status {
+            instance_state.disabled = disable_status;
+            self.instance_state_mapper().insert(iid, instance_state);
 
-                    result = Ok(());
-                }
-                else{
-                    result = sc_error!("Instance already in the expected disable state");
-                }
-            }
+            Ok(())
         }
-
-        return result;
+        else{
+            sc_error!("Instance already in the expected disable state")
+        }
     }
 
     #[view(getFeePool)]
@@ -133,11 +128,8 @@ pub trait Prize {
     fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
 
         // Check validity of parameters
-        if duration_in_s == 0 {
-            return MultiArg2((sc_error!("duration cannot be null"), OptionalResult::None));
-        }else if token_amount == 0 {
-            return MultiArg2((sc_error!("Prize cannot be null"), OptionalResult::None));
-        }
+        require_with_opt!(duration_in_s != 0, "duration cannot be null");
+        require_with_opt!(token_amount > 0, "Prize cannot be null");
 
         // Compute next iid
         let new_iid = self.iid_counter_mapper().get() + 1;
@@ -189,31 +181,26 @@ pub trait Prize {
         self.iid_counter_mapper().set(&new_iid);
 
         // Format result
-        return MultiArg2((Ok(()), OptionalResult::Some(new_iid)));
+        Ok_some!(new_iid);
     }
 
     #[endpoint(trigger)]
     fn trigger(&self, iid: u32) -> SCResult<()> {
-        require!(
-            self.get_instance_status(iid) == InstanceStatus::Ended,
-            "Instance is not in the good state"
-        );
+
+        // Check validity of parameters
+        require!(self.get_instance_status(iid) == InstanceStatus::Ended, "Instance is not in the good state");
         
         // Get instance info & state
         let instance_info = self.instance_info_mapper().get(&iid).unwrap();
         let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
-            
-        if (self.blockchain().get_caller() != instance_info.sponsor_info.address)
-            && (self.blockchain().get_caller() != self.blockchain().get_owner_address())
-        {
-            return sc_error!(
-                "Instance can only be triggered by its sponsor or by administrator"
-            );
-        }
+        
+        // Check calling address is allowed
+        require!((self.blockchain().get_caller() == instance_info.sponsor_info.address) || 
+                 (self.blockchain().get_caller() == self.blockchain().get_owner_address()), 
+                 "Instance can only be triggered by its sponsor or by administrator");
 
         // Send rewards to sponsor
         if instance_state.sponsor_rewards_pool > BigUint::zero() {
-
             self.send().direct_egld(
                 &instance_info.sponsor_info.address,
                 &instance_state.sponsor_rewards_pool,
@@ -249,63 +236,51 @@ pub trait Prize {
 
         // Checks
         let caller = self.blockchain().get_caller();
+        require_with_opt!(self.get_instance_status(iid) == InstanceStatus::Running, "Instance is not active");
+        require_with_opt!(self.instance_players_set_mapper(iid).contains(&caller) == false, "Player has already played");
+        require_with_opt!(fees == self.fee_policy_mapper().get().fee_amount_egld, "Wrong fees amount");
 
-        if self.get_instance_status(iid) != InstanceStatus::Running {
-            return MultiArg2((sc_error!("Instance is not active"), OptionalArg::None));
-        } else if self.instance_players_set_mapper(iid).contains(&caller) == true {
-            return MultiArg2((sc_error!("Player has already played"), OptionalArg::None));
-        }else if fees != self.fee_policy_mapper().get().fee_amount_egld {
-            return MultiArg2((sc_error!("Wrong fees amount"), OptionalArg::None));
+        // Capitalize fees and set sponsor rewards
+        if fees != BigUint::zero() {
+            let instance_info = self.instance_info_mapper().get(&iid).unwrap();
+            let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
+
+            // Compute sponsor rewards
+            let sponsor_reward_percent:BigUint = BigUint::from(instance_info.sponsor_info.reward_percent);
+            let sponsor_reward_amount: BigUint = fees.clone() * sponsor_reward_percent / BigUint::from(100u8);
+            let remaining_fees: BigUint = fees - sponsor_reward_amount.clone();
+
+            // Add rewards to sponsor rewards pool
+            instance_state.sponsor_rewards_pool += sponsor_reward_amount;
+            self.instance_state_mapper().insert(iid, instance_state);
+
+            // Add fees to pool
+            self.fee_pool_mapper().update(|total_fees| *total_fees += remaining_fees);
         }
-        else {
-            // Capitalize fees and set sponsor rewards
-            if fees != BigUint::zero() {
-                let instance_info = self.instance_info_mapper().get(&iid).unwrap();
-                let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
 
-                // Compute sponsor rewards
-                let sponsor_reward_percent:BigUint = BigUint::from(instance_info.sponsor_info.reward_percent);
-                let sponsor_reward_amount: BigUint = fees.clone() * sponsor_reward_percent / BigUint::from(100u8);
-                let remaining_fees: BigUint = fees - sponsor_reward_amount.clone();
+        // Add caller address to participants for this instance
+        self.instance_players_set_mapper(iid).insert(caller.clone());
+        self.instance_players_vec_mapper(iid).push(&caller);
 
-                // Add rewards to sponsor rewards pool
-                instance_state.sponsor_rewards_pool += sponsor_reward_amount;
-                self.instance_state_mapper().insert(iid, instance_state);
-
-                // Add fees to pool
-                self.fee_pool_mapper().update(|total_fees| *total_fees += remaining_fees);
-            }
-
-            // Add caller address to participants for this instance
-            self.instance_players_set_mapper(iid).insert(caller.clone());
-            self.instance_players_vec_mapper(iid).push(&caller);
-
-            return MultiArg2((Ok(()), OptionalArg::Some(self.instance_players_vec_mapper(iid).len())));
-        }
+        Ok_some!(self.instance_players_vec_mapper(iid).len());
     }
 
     #[endpoint(claimPrize)]
     fn claim_prize(&self, iid: u32) -> SCResult<()> {
-        require!(
-            self.get_instance_status(iid) == InstanceStatus::Triggered,
-            "Instance is not in the good state"
-        );
+        // Checks
+        require!(self.get_instance_status(iid) == InstanceStatus::Triggered, "Instance is not in the good state");
+        require!(self.blockchain().get_caller() == self.instance_state_mapper().get(&iid).unwrap().winner_info.address, "Prize can only be claimed by the winner");
 
-        // Get instance info & state
-        let instance_info = self.instance_info_mapper().get(&iid).unwrap();
+        // Get prize info & instance state
+        let prize_info = self.instance_info_mapper().get(&iid).unwrap().prize_info;
         let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
-
-        // Check caller is the winner
-        if instance_state.winner_info.address != self.blockchain().get_caller() {
-            return sc_error!("Prize can only be claimed by the winner");
-        }
 
         // Send prize to winner address
         self.send().direct(
             &instance_state.winner_info.address,
-            &instance_info.prize_info.token_identifier,
-            instance_info.prize_info.token_nonce,
-            &instance_info.prize_info.token_amount,
+            &prize_info.token_identifier,
+            prize_info.token_nonce,
+            &prize_info.token_amount,
             b"Prize claimed",
         );
 
@@ -366,32 +341,14 @@ pub trait Prize {
     #[view(getInfoLegacy)]
     // Returns : (Result, optional (status, number of players, winner address, instance info)) of instance identified by iid provided  
     fn get_instance_info_legacy(&self, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<MultiResult4<InstanceStatus, usize, ManagedAddress, InstanceInfo<Self::Api>>>> {
-        
-        let result: MultiResult2<SCResult<()>, OptionalResult<MultiResult4<InstanceStatus, usize, ManagedAddress, InstanceInfo<Self::Api>>>>;
+        //Checks
+        require_with_opt!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
 
-        // Retrieve instance information
-        match self.instance_info_mapper().get(&iid) {
-            None => {
-                // Instance does not exist
-                result = MultiArg2((
-                    sc_error!("Instance does not exists"),
-                    OptionalArg::None,
-                ));
-            }
-            Some(instance_info) => {
-                // Instance found : return status, number of players, winner and info
-                result = MultiArg2((
-                    Ok(()),
-                    OptionalArg::Some(MultiArg4((
-                        self.get_instance_status(iid),
-                        self.instance_players_set_mapper(iid).len(),
-                        self.instance_state_mapper().get(&iid).unwrap().winner_info.address,
-                        instance_info))),
-                ));
-            }
-        }
-
-        return result;
+        Ok_some!(MultiArg4((
+            self.get_instance_status(iid),
+            self.instance_players_set_mapper(iid).len(),
+            self.instance_state_mapper().get(&iid).unwrap().winner_info.address,
+            self.instance_info_mapper().get(&iid).unwrap())))
     }   
             
     #[view(getAllInfoLegacy)]
@@ -431,38 +388,19 @@ pub trait Prize {
 
     #[view(getInfo)]
     fn get_instance_info(&self, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<GetInfoStruct<Self::Api>>> {
-        
-        let result: MultiResult2<SCResult<()>, OptionalResult<GetInfoStruct<Self::Api>>>;
+        //Checks
+        require_with_opt!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
 
-        // Retrieve instance information
-        match self.instance_info_mapper().get(&iid) {
-            None => {
-                // Instance does not exist
-                result = MultiArg2((
-                    sc_error!("Instance does not exists"),
-                    OptionalArg::None,
-                ));
-            }
-            Some(instance_info) => {
-                // Instance found, fill return struct
-                let get_info_struct = GetInfoStruct {
-                    iid: iid,
-                    instance_status: self.get_instance_status(iid),
-                    number_of_players: self.instance_players_set_mapper(iid).len(),
-                    winner_info: self.instance_state_mapper().get(&iid).unwrap().winner_info,
-                    sponsor_info: instance_info.sponsor_info,
-                    prize_info: instance_info.prize_info,
-                    deadline: instance_info.deadline,
-                };
+        let instance_info = self.instance_info_mapper().get(&iid).unwrap();
 
-                result = MultiArg2((
-                    Ok(()),
-                    OptionalArg::Some(get_info_struct),
-                ));
-            }
-        }
-
-        return result;
+        Ok_some!(GetInfoStruct {
+            iid: iid,
+            instance_status: self.get_instance_status(iid),
+            number_of_players: self.instance_players_set_mapper(iid).len(),
+            winner_info: self.instance_state_mapper().get(&iid).unwrap().winner_info,
+            sponsor_info: instance_info.sponsor_info,
+            prize_info: instance_info.prize_info,
+            deadline: instance_info.deadline})
     }   
             
     #[view(getAllInfo)]
@@ -495,27 +433,18 @@ pub trait Prize {
 
     #[view(getRemainingTime)]
     fn get_remaining_time(&self, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<u64>> {
-        let result: MultiResult2<SCResult<()>, OptionalResult<u64>>;
+        require_with_opt!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
 
-        // Retrieve instance information
-        match self.instance_info_mapper().get(&iid) {
-            None => {
-                // Instance does not exist
-                result = MultiArg2((sc_error!("Instance does not exists"), OptionalResult::None));
-            }
-            Some(instance_info) => {
-                let current_date_time = self.blockchain().get_block_timestamp();
-                let mut remaing_time: u64 = 0;
+        // Compute remaining time
+        let deadline: u64 = self.instance_info_mapper().get(&iid).unwrap().deadline;
+        let current_date_time: u64 = self.blockchain().get_block_timestamp();
+        let mut remaining_time: u64 = 0;
 
-                if instance_info.deadline > current_date_time {
-                    remaing_time = instance_info.deadline - current_date_time;
-                }
-
-                result = MultiArg2((Ok(()), OptionalResult::Some(remaing_time)));
-            }
+        if deadline > current_date_time {
+            remaining_time = deadline - current_date_time;
         }
 
-        return result;
+        Ok_some!(remaining_time);
     }
 
     #[view(hasStatus)]
@@ -587,27 +516,16 @@ pub trait Prize {
 
     #[view(hasWon)]
     fn has_won(&self, iid: u32, player_address: ManagedAddress) -> MultiResult2<SCResult<()>, OptionalResult<bool>> {
+        // Checks
+        require_with_opt!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
 
-        let result: MultiResult2<SCResult<()>, OptionalResult<bool>>;
+        let mut result: bool = false;
 
-        // Retrieve instance state
-        match self.instance_state_mapper().get(&iid) {
-            None => {
-                // Instance does not exist
-                result = MultiArg2((sc_error!("Instance does not exists"), OptionalResult::None));
-            }
-            Some(instance_state) => {
-                // Return true is player_address provided in parameter is the winner address for the specified instance ID
-                if instance_state.winner_info.address == player_address {
-                    result = MultiArg2((Ok(()), OptionalResult::Some(true)));
-                }
-                else {
-                    result = MultiArg2((Ok(()), OptionalResult::Some(false)))
-                }
-            }
+        if player_address == self.instance_state_mapper().get(&iid).unwrap().winner_info.address {
+            result = true;
         }
 
-        return result;
+        Ok_some!(result)
     }
 
     /////////////////////////////////////////////////////////////////////
