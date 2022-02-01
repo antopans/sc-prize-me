@@ -3,17 +3,7 @@
 elrond_wasm::imports!();
 
 mod common_types;
-
-use common_types::PrizeType;
-use common_types::InstanceStatus;
-use common_types::InstanceInfo;
-use common_types::InstanceState;
-use common_types::PrizeInfo;
-use common_types::WinnerInfo;
-use common_types::SponsorInfo;
-use common_types::FeePolicy;
-use common_types::GetInfoStruct;
-
+use common_types::*;
 
 #[elrond_wasm::contract]
 pub trait Prize {
