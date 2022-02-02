@@ -18,12 +18,6 @@ pub struct FeePolicy<M: ManagedTypeApi> {
 #[elrond_wasm::module]
 pub trait FeeModule {
 
-    #[endpoint(feeDummy)]
-    fn fee_dummy(&self) -> SCResult<()> {
-        
-        Ok(())  
-    }
-
     /////////////////////////////////////////////////////////////////////
     // Endpoints
     /////////////////////////////////////////////////////////////////////

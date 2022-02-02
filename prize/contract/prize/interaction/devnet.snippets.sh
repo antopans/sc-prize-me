@@ -45,7 +45,7 @@ cleanClaimed() {
 # Param1 : fees amount in EGLD
 # Param2 : sponsor reward in percent
 setFeePol() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setFeePol" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setFeePol" --arguments $1 $2 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 claimFees() {
@@ -60,6 +60,43 @@ disable() {
 
  getFeePool() {
     erdpy --verbose contract query ${ADDRESS} --function="getFeePool" --proxy=${PROXY} 
+}
+
+# Param1 : manual claim enable status
+setParamManClaim() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setParamManClaim" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
+ getParamManClaim() {
+    erdpy --verbose contract query ${ADDRESS} --function="getParamManClaim" --proxy=${PROXY} 
+}
+
+# Param1 : min duration
+# Param2 : max duration
+setParamDuration() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setParamDuration" --arguments $1 $2 --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
+ getParamDuration() {
+    erdpy --verbose contract query ${ADDRESS} --function="getParamDuration" --proxy=${PROXY} 
+}
+
+ getAddrBlacklist() {
+    erdpy --verbose contract query ${ADDRESS} --function="getAddrBlacklist" --proxy=${PROXY} 
+}
+
+# Param1 : address to blacklist
+addAddrBlacklist() {
+    BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $1`    
+    HEX_ADDRESS=`${SCRIPT_PATH}/${BECH32_UTIL} $BECH32_PEM_WALLET`
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="addAddrBlacklist" --arguments "0x${HEX_ADDRESS}" --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
+# Param1 : address to blacklist
+rmAddrBlacklist() {
+    BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $1`    
+    HEX_ADDRESS=`${SCRIPT_PATH}/${BECH32_UTIL} $BECH32_PEM_WALLET`
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="rmAddrBlacklist" --arguments "0x${HEX_ADDRESS}" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 ######################################################################
@@ -126,12 +163,6 @@ createNft() {
     TX_DATA="${TX_TOKEN_DATA}@${TX_SC_CREATE_DATA}"  
 
     erdpy --verbose tx new --receiver=${BECH32_PEM_WALLET} --recall-nonce --pem=$2 --gas-limit=50000000 --data=${TX_DATA} --send --proxy=${PROXY} --chain=${CHAIN}
-}
-
-# Param1 : Instance ID
-# Param2 : pem wallet
-trigger() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=50000000 --function="trigger" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 ######################################################################

@@ -37,12 +37,12 @@
 		{
 			"step": "setState",
 			"currentBlockInfo": {
-				"blockRandomSeed": "0x000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000"
+				"blockRandomSeed": "0x000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000"
 			}
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/sponsor_actions/sponsorEGLD_triggers_egld_prize.steps.json"
+			"path": "steps/admin_actions/admin_triggerEnded.steps.json"
 		},
 		{
 			"step": "externalSteps",
@@ -81,12 +81,12 @@
 		{
 			"step": "setState",
 			"currentBlockInfo": {
-				"blockRandomSeed": "0x000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000"
+				"blockRandomSeed": "0x0000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000000"
 			}
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/sponsor_actions/sponsorESDT_triggers_esdt_prize.steps.json"
+			"path": "steps/admin_actions/admin_triggerEnded.steps.json"
 		},
 		{
 			"step": "externalSteps",
@@ -127,12 +127,12 @@
 		{
 			"step": "setState",
 			"currentBlockInfo": {
-				"blockRandomSeed": "0x000000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+				"blockRandomSeed": "0x000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
 			}
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/sponsor_actions/sponsorNFT_triggers_nft_prize.steps.json"
+			"path": "steps/admin_actions/admin_triggerEnded.steps.json"
 		},
 		{
 			"step": "externalSteps",
@@ -172,12 +172,12 @@
 		{
 			"step": "setState",
 			"currentBlockInfo": {
-				"blockRandomSeed": "0x000000000000000070000000000000000000000000000000000000000000000000000000000000000000000000000000"
+				"blockRandomSeed": "0x000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000"
 			}
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/sponsor_actions/sponsorSFT_triggers_sft_prize.steps.json"
+			"path": "steps/admin_actions/admin_triggerEnded.steps.json"
 		},
 		{
 			"step": "externalSteps",

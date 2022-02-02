@@ -27,9 +27,20 @@ pub trait Prize:
 
     #[init]
     fn init(&self) -> SCResult<()> {
+        const DEFAULT_MIN_DURATION: u64 = 60;           // 60 seconds
+        const DEFAULT_MAX_DURATION: u64 = 60*60*24*365; // 1 year
         
         // Initializations @ deployment only 
+
+        // Instances
         self.iid_counter_mapper().set_if_empty(&0u32);
+
+        // Parameters
+        self.param_manual_claim_mapper().set_if_empty(&false);
+        self.param_duration_min_mapper().set_if_empty(&DEFAULT_MIN_DURATION);              
+        self.param_duration_max_mapper().set_if_empty(&DEFAULT_MAX_DURATION); 
+
+        // Fees
         self.fee_pool_mapper().set_if_empty(&BigUint::zero());
         self.fee_policy_mapper().set_if_empty(&FeePolicy {
             fee_amount_egld : BigUint::zero(),
@@ -50,7 +61,7 @@ pub trait Prize:
         let ended_instances: VarArgs<u32> = self.get_instance_ids(MultiArgVec(Vec::from([InstanceStatus::Ended])));
 
         for iid in ended_instances.iter() {
-            self.trigger(iid.clone());
+            self.func_trigger(iid.clone());
         }
 
         Ok(())
@@ -87,11 +98,9 @@ pub trait Prize:
             Ok(())
         }
         else{
-            sc_error!("Instance already in the expected disable state")
+            sc_error!("Instance is already in the expected disable state")
         }
-    }
-
-    
+    } 
 
     /////////////////////////////////////////////////////////////////////
     // DApp endpoints : sponsor API
@@ -101,102 +110,48 @@ pub trait Prize:
     fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
 
         // Check validity of parameters
-        require_with_opt!(duration_in_s != 0, "duration cannot be null");
+        require_with_opt!(self.address_blacklist_set_mapper().contains(&self.blockchain().get_caller()) == false, "Caller blacklisted");
+        require_with_opt!(duration_in_s >= self.param_duration_min_mapper().get(), "Duration out of allowed range");
+        require_with_opt!(duration_in_s <= self.param_duration_max_mapper().get(), "Duration out of allowed range");
         require_with_opt!(token_amount > 0, "Prize cannot be null");
 
         // Compute next iid
         let new_iid = self.iid_counter_mapper().get() + 1;
 
-        // Compute instance deadline based on current time & duration parameter
-        let deadline = self.blockchain().get_block_timestamp() + duration_in_s;
-
-        // Fill sponsor information
-        let sponsor_info = SponsorInfo {
-            address: self.blockchain().get_caller(),
-            pseudo: pseudo,
-            url: url,
-            logo_link: logo_link,
-            free_text: free_text,
-            reward_percent: self.fee_policy_mapper().get().sponsor_reward_percent,
-        };
-
-        // Fill prize information
-        let prize_info = PrizeInfo {
-            prize_type: if token_identifier.is_egld() {PrizeType::EgldPrize} else if token_identifier.is_esdt() {PrizeType::EsdtPrize} else {PrizeType::UnknownPrize},
-            token_identifier: token_identifier,
-            token_nonce: token_nonce,
-            token_amount: token_amount,
-        };
-
         // Aggregate instance information
         let instance_info = InstanceInfo {
-            sponsor_info: sponsor_info,
-            prize_info: prize_info,
-            deadline: deadline,
+            sponsor_info: SponsorInfo {
+                address: self.blockchain().get_caller(),
+                pseudo: pseudo,
+                url: url,
+                logo_link: logo_link,
+                free_text: free_text,
+                reward_percent: self.fee_policy_mapper().get().sponsor_reward_percent},
+            prize_info: PrizeInfo {
+                prize_type: if token_identifier.is_egld() {PrizeType::EgldPrize} else if token_identifier.is_esdt() {PrizeType::EsdtPrize} else {PrizeType::UnknownPrize},
+                token_identifier: token_identifier,
+                token_nonce: token_nonce,
+                token_amount: token_amount},
+            deadline: self.blockchain().get_block_timestamp() + duration_in_s
         };
 
         // Initialize instance state
-        let winner_info = WinnerInfo {
-            ticket_number: 0usize,
-            address: ManagedAddress::zero(),
-        };
-
         let instance_state = InstanceState {
             sponsor_rewards_pool: BigUint::zero(),
             claimed_status: false,
-            winner_info: winner_info,
+            winner_info: WinnerInfo {
+                ticket_number: 0usize,
+                address: ManagedAddress::zero()},
             disabled: false,
         };
 
         // Record new instance
+        self.iid_counter_mapper().set(&new_iid);
         self.instance_info_mapper().insert(new_iid, instance_info);
         self.instance_state_mapper().insert(new_iid, instance_state);
-        self.iid_counter_mapper().set(&new_iid);
 
         // Format result
         Ok_some!(new_iid);
-    }
-
-    #[endpoint(trigger)]
-    fn trigger(&self, iid: u32) -> SCResult<()> {
-
-        // Check validity of parameters
-        require!(self.get_instance_status(iid) == InstanceStatus::Ended, "Instance is not in the good state");
-        
-        // Get instance info & state
-        let instance_info = self.instance_info_mapper().get(&iid).unwrap();
-        let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
-        
-        // Check calling address is allowed
-        require!((self.blockchain().get_caller() == instance_info.sponsor_info.address) || 
-                 (self.blockchain().get_caller() == self.blockchain().get_owner_address()), 
-                 "Instance can only be triggered by its sponsor or by administrator");
-
-        // Send rewards to sponsor
-        if instance_state.sponsor_rewards_pool > BigUint::zero() {
-            self.send().direct_egld(
-                &instance_info.sponsor_info.address,
-                &instance_state.sponsor_rewards_pool,
-                b"Sponsor rewards",
-            );
-        }
-
-        if self.instance_players_vec_mapper(iid).len() == 0 {
-            // No player, give prize back to instance sponsor
-            instance_state.winner_info.address = instance_info.sponsor_info.address.clone();
-        } 
-        else {
-            // Choose winner
-            let mut rand = RandomnessSource::<Self::Api>::new();       
-            let winner_address_index = rand.next_usize_in_range(1, self.instance_players_vec_mapper(iid).len() + 1);
-            instance_state.winner_info.ticket_number = winner_address_index.clone();
-            instance_state.winner_info.address = self.instance_players_vec_mapper(iid).get(winner_address_index);
-        }
-
-        // Record winner information
-        self.instance_state_mapper().insert(iid, instance_state);      
-
-        Ok(())
     }
 
     /////////////////////////////////////////////////////////////////////
@@ -209,6 +164,7 @@ pub trait Prize:
 
         // Checks
         let caller = self.blockchain().get_caller();
+        require_with_opt!(self.address_blacklist_set_mapper().contains(&caller) == false, "Caller blacklisted");
         require_with_opt!(self.get_instance_status(iid) == InstanceStatus::Running, "Instance is not active");
         require_with_opt!(self.instance_players_set_mapper(iid).contains(&caller) == false, "Player has already played");
         require_with_opt!(fees == self.fee_policy_mapper().get().fee_amount_egld, "Wrong fees amount");
@@ -241,6 +197,7 @@ pub trait Prize:
     #[endpoint(claimPrize)]
     fn claim_prize(&self, iid: u32) -> SCResult<()> {
         // Checks
+        require!(self.address_blacklist_set_mapper().contains(&self.blockchain().get_caller()) == false, "Caller blacklisted");
         require!(self.get_instance_status(iid) == InstanceStatus::Triggered, "Instance is not in the good state");
         require!(self.blockchain().get_caller() == self.instance_state_mapper().get(&iid).unwrap().winner_info.address, "Prize can only be claimed by the winner");
 
@@ -249,13 +206,7 @@ pub trait Prize:
         let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
 
         // Send prize to winner address
-        self.send().direct(
-            &instance_state.winner_info.address,
-            &prize_info.token_identifier,
-            prize_info.token_nonce,
-            &prize_info.token_amount,
-            b"Prize claimed",
-        );
+        self.func_send_prize(&prize_info, &instance_state.winner_info.address);
 
         // Update claimed status
         instance_state.claimed_status = true;
@@ -492,6 +443,66 @@ pub trait Prize:
         }
 
         Ok_some!(result)
+    }
+
+    /////////////////////////////////////////////////////////////////////
+    // Private functions
+    /////////////////////////////////////////////////////////////////////
+    fn func_send_prize(&self, prize_info: &PrizeInfo<Self::Api>, winner_address: &ManagedAddress) {
+
+        // Send prize to winner address
+        self.send().direct(
+            winner_address,
+            &prize_info.token_identifier,
+            prize_info.token_nonce,
+            &prize_info.token_amount,
+            b"Send prize",
+        );
+    }
+
+    fn func_trigger(&self, iid: u32) -> SCResult<()> {
+
+        // Check validity of parameters
+        require!(self.get_instance_status(iid) == InstanceStatus::Ended, "Instance is not in the good state");
+        
+        // Get instance info & state
+        let instance_info = self.instance_info_mapper().get(&iid).unwrap();
+        let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
+
+        // Send rewards to sponsor
+        if instance_state.sponsor_rewards_pool > BigUint::zero() {
+            self.send().direct_egld(
+                &instance_info.sponsor_info.address,
+                &instance_state.sponsor_rewards_pool,
+                b"Sponsor rewards",
+            );
+        }
+
+        if self.instance_players_vec_mapper(iid).len() == 0 {
+            // No player, give prize back to instance sponsor
+            instance_state.winner_info.address = instance_info.sponsor_info.address.clone();
+        } 
+        else {
+            // Choose winner
+            let mut rand = RandomnessSource::<Self::Api>::new();       
+            let winner_address_index = rand.next_usize_in_range(1, self.instance_players_vec_mapper(iid).len() + 1);
+            instance_state.winner_info.ticket_number = winner_address_index.clone();
+            instance_state.winner_info.address = self.instance_players_vec_mapper(iid).get(winner_address_index);
+        }
+
+        // Prize auto-distribution if enabled
+        if self.param_manual_claim_mapper().get() == false {
+            // Send prize to winner address
+            self.func_send_prize(&instance_info.prize_info, &instance_state.winner_info.address);
+
+            // Update claimed status
+            instance_state.claimed_status = true;
+        }
+
+        // Record new instance state
+        self.instance_state_mapper().insert(iid, instance_state);          
+
+        Ok(())
     }
 
     /////////////////////////////////////////////////////////////////////

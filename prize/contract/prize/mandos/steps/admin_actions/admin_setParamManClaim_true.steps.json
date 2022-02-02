@@ -1,17 +1,17 @@
 {
-	"name": "sponsorSFT triggers sft prize",
+	"name": "Setup manual prize claim for winner",
 	"steps": [
 		{
 			"step": "scCall",
-			"txId": "trigger-sponsorSFT",
-			"comment": "SponsorSFT triggers SFT prize",
+			"txId": "setParamManClaim_true",
+			"comment": "",
 			"tx": {
-				"from": "address:sponsorSFT",
+				"from": "address:owner",
 				"to": "sc:prize",
 				"egldValue": "0",
-				"function": "trigger",
+				"function": "setParamManClaim",
 				"arguments": [
-					"4"
+					"1"
 				],
 				"gasLimit": "5,000,000,000",
 				"gasPrice": "0"
@@ -20,6 +20,7 @@
 				"out": [
 				],
 				"status": "0",
+				"message":"",
 				"gas": "*",
 				"refund": "*"
 			}
