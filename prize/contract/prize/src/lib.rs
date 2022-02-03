@@ -1,28 +1,49 @@
 #![no_std]
 
 elrond_wasm::imports!();
+elrond_wasm::derive_imports!();
 
-// Modules
+////////////////////////////////////////////////////////////////////
+// Modules & uses
+////////////////////////////////////////////////////////////////////
+mod instance;
+mod player;
 mod security;
 mod parameter;
 mod fee;
-
-// Types
-mod common_types;
-use common_types::*;
-use fee::FeePolicy;
-
-// Macros
 mod macros;
 
+use instance::*;
+
+////////////////////////////////////////////////////////////////////
+// Types
+////////////////////////////////////////////////////////////////////
+
+// data format for endpoint return
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
+pub struct GetInfoStruct<M: ManagedTypeApi> {
+    pub iid: u32,
+    pub instance_status: InstanceStatus,
+    pub number_of_players: usize,
+    pub winner_info: WinnerInfo<M>,
+    pub sponsor_info: SponsorInfo<M>,
+    pub prize_info: PrizeInfo<M>,
+    pub deadline: u64,
+}
+
+////////////////////////////////////////////////////////////////////
+// Functions
+////////////////////////////////////////////////////////////////////
 #[elrond_wasm::contract]
 pub trait Prize: 
-    security::SecurityModule 
+    instance::InstanceModule
+    +player::PlayerModule
+    +security::SecurityModule 
     +parameter::ParameterModule
     +fee::FeeModule {
     
     /////////////////////////////////////////////////////////////////////
-    // SC Management API
+    // SC Management endpoints
     /////////////////////////////////////////////////////////////////////
 
     #[init]
@@ -30,6 +51,8 @@ pub trait Prize:
         const DEFAULT_MIN_DURATION: u64 = 60;           // 60 seconds
         const DEFAULT_MAX_DURATION: u64 = 60*60*24*365; // 1 year
         const DEFAULT_MAX_NB_INSTANCES_PER_SPONSOR: u32 = 20;
+        const DEFAULT_FEE_AMOUNT_EGLD: u32 = 0;
+        const DEFAULT_SPONSOR_REWARD_PERCENT: u8 = 0u8;
         
         // Initializations @ deployment only 
 
@@ -43,17 +66,13 @@ pub trait Prize:
         self.param_duration_max_mapper().set_if_empty(&DEFAULT_MAX_DURATION); 
 
         // Fees
-        self.fee_pool_mapper().set_if_empty(&BigUint::zero());
-        self.fee_policy_mapper().set_if_empty(&FeePolicy {
-            fee_amount_egld : BigUint::zero(),
-            sponsor_reward_percent : 0u8,
-        });
+        self.init_fees_if_empty(BigUint::from(DEFAULT_FEE_AMOUNT_EGLD), DEFAULT_SPONSOR_REWARD_PERCENT);
 
         Ok(())
     }
 
     /////////////////////////////////////////////////////////////////////
-    // Administrator API
+    // Administrator endpoints
     /////////////////////////////////////////////////////////////////////
 
     #[endpoint(triggerEnded)]
@@ -63,7 +82,36 @@ pub trait Prize:
         let ended_instances: VarArgs<u32> = self.get_instance_ids(MultiArgVec(Vec::from([InstanceStatus::Ended])));
 
         for iid in ended_instances.iter() {
-            self.func_trigger(iid.clone());
+            // Get instance info & state
+            let instance_info = self.instance_info_mapper().get(&iid).unwrap();
+            let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
+
+            // Send rewards to sponsor
+            self.pay_rewards_to_sponsor(*iid, instance_info.sponsor_info.address.clone());
+
+            if self.instance_players_vec_mapper(*iid).len() == 0 {
+                // No player, give prize back to instance sponsor
+                instance_state.winner_info.address = instance_info.sponsor_info.address.clone();
+            } 
+            else {
+                // Choose winner
+                let mut rand = RandomnessSource::<Self::Api>::new();       
+                let winner_address_index = rand.next_usize_in_range(1, self.instance_players_vec_mapper(*iid).len() + 1);
+                instance_state.winner_info.ticket_number = winner_address_index.clone();
+                instance_state.winner_info.address = self.instance_players_vec_mapper(*iid).get(winner_address_index);
+            }
+
+            // Auto-distribution of prize if enabled
+            if self.param_manual_claim_mapper().get() == false {
+                // Send prize to winner address
+                self.func_send_prize(&instance_info.prize_info, &instance_state.winner_info.address);
+
+                // Update claimed status
+                instance_state.claimed_status = true;
+            }
+
+            // Record new instance state
+            self.instance_state_mapper().insert(*iid, instance_state);   
         }
 
         Ok(())
@@ -84,25 +132,6 @@ pub trait Prize:
 
         Ok(())
     }  
-
-    #[endpoint(disable)]
-    fn disable_instance(&self, iid: u32, disable_status: bool) -> SCResult<()> {
-        only_owner!(self, "Caller address not allowed");
-        require!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
-        
-        // Retrieve instance state
-        let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
-        
-        if instance_state.disabled != disable_status {
-            instance_state.disabled = disable_status;
-            self.instance_state_mapper().insert(iid, instance_state);
-
-            Ok(())
-        }
-        else{
-            sc_error!("Instance is already in the expected disable state")
-        }
-    } 
 
     /////////////////////////////////////////////////////////////////////
     // DApp endpoints : sponsor API
@@ -129,8 +158,7 @@ pub trait Prize:
                 pseudo: pseudo,
                 url: url,
                 logo_link: logo_link,
-                free_text: free_text,
-                reward_percent: self.fee_policy_mapper().get().sponsor_reward_percent},
+                free_text: free_text},
             prize_info: PrizeInfo {
                 prize_type: if token_identifier.is_egld() {PrizeType::EgldPrize} else if token_identifier.is_esdt() {PrizeType::EsdtPrize} else {PrizeType::UnknownPrize},
                 token_identifier: token_identifier,
@@ -141,13 +169,15 @@ pub trait Prize:
 
         // Initialize instance state
         let instance_state = InstanceState {
-            sponsor_rewards_pool: BigUint::zero(),
             claimed_status: false,
             winner_info: WinnerInfo {
                 ticket_number: 0usize,
                 address: ManagedAddress::zero()},
             disabled: false,
         };
+
+        // Initialize sponsor rewards
+        self.init_rewards(new_iid);
 
         // Record new instance
         self.iid_counter_mapper().set(&new_iid);
@@ -174,23 +204,8 @@ pub trait Prize:
         require_with_opt!(fees == self.fee_policy_mapper().get().fee_amount_egld, "Wrong fees amount");
 
         // Capitalize fees and set sponsor rewards
-        if fees != BigUint::zero() {
-            let instance_info = self.instance_info_mapper().get(&iid).unwrap();
-            let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
-
-            // Compute sponsor rewards
-            let sponsor_reward_percent:BigUint = BigUint::from(instance_info.sponsor_info.reward_percent);
-            let sponsor_reward_amount: BigUint = fees.clone() * sponsor_reward_percent / BigUint::from(100u8);
-            let remaining_fees: BigUint = fees - sponsor_reward_amount.clone();
-
-            // Add rewards to sponsor rewards pool
-            instance_state.sponsor_rewards_pool += sponsor_reward_amount;
-            self.instance_state_mapper().insert(iid, instance_state);
-
-            // Add fees to pool
-            self.fee_pool_mapper().update(|total_fees| *total_fees += remaining_fees);
-        }
-
+        self.append_fees_ands_rewards(iid, fees);
+        
         // Add caller address to participants for this instance
         self.instance_players_set_mapper(iid).insert(caller.clone());
         self.instance_players_vec_mapper(iid).push(&caller);
@@ -222,42 +237,6 @@ pub trait Prize:
     /////////////////////////////////////////////////////////////////////
     // DApp view API
     /////////////////////////////////////////////////////////////////////
-
-    #[view(getNb)]
-    fn get_nb_instances(&self) -> u32 {
-        return self.instance_info_mapper().len() as u32;
-    }
-
-    #[view(getStatus)]
-    fn get_instance_status(&self, iid: u32) -> InstanceStatus {
-        
-        // Compute instance status
-        match self.instance_state_mapper().get(&iid) {
-            None => return InstanceStatus::NotExisting,
-            Some(instance_state) => {
-                // Compute instance status based on fields values
-                if instance_state.disabled == true {
-                    return InstanceStatus::Disabled;
-                } else {
-                    if instance_state.claimed_status == true {
-                        return InstanceStatus::Claimed;
-                    } else {
-                        if instance_state.winner_info.address != ManagedAddress::zero() {
-                            return InstanceStatus::Triggered;
-                        } else {
-                            let instance_info = self.instance_info_mapper().get(&iid).unwrap();
-
-                            if self.blockchain().get_block_timestamp() > instance_info.deadline {
-                                return InstanceStatus::Ended;
-                            } else {
-                                return InstanceStatus::Running;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     #[view(getInfoLegacy)]
     // Returns : (Result, optional (status, number of players, winner address, instance info)) of instance identified by iid provided  
@@ -352,121 +331,8 @@ pub trait Prize:
         return MultiArg2((instances.len(), instances));
     }
 
-    #[view(getRemainingTime)]
-    fn get_remaining_time(&self, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<u64>> {
-        require_with_opt!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
-
-        // Compute remaining time
-        let deadline: u64 = self.instance_info_mapper().get(&iid).unwrap().deadline;
-        let current_date_time: u64 = self.blockchain().get_block_timestamp();
-        let mut remaining_time: u64 = 0;
-
-        if deadline > current_date_time {
-            remaining_time = deadline - current_date_time;
-        }
-
-        Ok_some!(remaining_time);
-    }
-
-    #[view(hasStatus)]
-    fn is_instance_with_status(&self, instance_status: InstanceStatus) -> bool {
-        let instances: VarArgs<u32> = self.get_instance_ids(MultiArgVec(Vec::from([instance_status])));
-        return instances.len() != 0;
-    }
-
-    #[view(getIDs)]
-    fn get_instance_ids(&self, #[var_args] status_filter: VarArgs<InstanceStatus>) -> VarArgs<u32> {
-
-        let mut instance_ids = VarArgs::new();
-        let mut status_filter_vec = status_filter.clone().into_vec();
-
-        // Ensure at least one status is provided as filter, check also overflow regarding the maximum possible values for status
-        if status_filter.len() >= 1 && status_filter.len() <= InstanceStatus::VARIANT_COUNT {
-
-            // Remove duplicates
-            status_filter_vec.sort();
-            status_filter_vec.dedup();
-
-            // Return all instances IDs which meet the status filter provided in parameter
-            for iid in self.instance_info_mapper().keys() {
-                for status in status_filter_vec.iter() {
-                    if self.get_instance_status(iid) == status.clone() {
-                        instance_ids.push(iid.clone());
-                        break;
-                    }   
-                }
-            }
-        }
-
-        return instance_ids;
-    }
-
-    #[view(getSponsorIDs)]
-    fn get_sponsor_instances(&self, sponsor_address: ManagedAddress) -> VarArgs<u32> {
-        let mut sponsor_iids = VarArgs::new();
-
-        // Return all instances IDs with sponsor address matching the one provided in parameter
-        for (iid, instance_info) in self.instance_info_mapper().iter() {
-            if instance_info.sponsor_info.address.clone() == sponsor_address {
-                sponsor_iids.push(iid);
-            }
-        }
-
-        return sponsor_iids;
-    }
-
-    #[view(getPlayerIDs)]
-    fn get_player_instances(&self, player_address: ManagedAddress) -> VarArgs<u32> {
-        let mut player_iids = VarArgs::new();
-
-        // Return all instances IDs to which player address provided in parameter has played
-        for iid in self.instance_info_mapper().keys() {
-            if self.has_played(iid, player_address.clone()) == true {
-                player_iids.push(iid.clone());
-            }
-        }
-
-        return player_iids;
-    }
-
-    #[view(hasPlayed)]
-    fn has_played(&self, iid: u32, player_address: ManagedAddress) -> bool {
-        // Return true is player_address provided in parameter is part of the SetMapper for the specified instance ID
-        return self.instance_players_set_mapper(iid).contains(&player_address);
-    }
-
-    #[view(hasWon)]
-    fn has_won(&self, iid: u32, player_address: ManagedAddress) -> MultiResult2<SCResult<()>, OptionalResult<bool>> {
-        // Checks
-        require_with_opt!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
-
-        let mut result: bool = false;
-
-        if player_address == self.instance_state_mapper().get(&iid).unwrap().winner_info.address {
-            result = true;
-        }
-
-        Ok_some!(result)
-    }
-
-    #[view(getNbSponsorRunning)]
-    fn get_nb_sponsor_running(&self, sponsor_address: ManagedAddress) -> u32 {
-        let mut nb_instances: u32 = 0;
-
-        // Compute number of running instances for a specific sponsor
-        for (iid, instance_info) in self.instance_info_mapper().iter() {
-           
-            if instance_info.sponsor_info.address.clone() == sponsor_address && self.get_instance_status(iid) == InstanceStatus::Running {
-                nb_instances += 1;
-            }
-        }
-
-        return nb_instances;
-    }
-
-
     /////////////////////////////////////////////////////////////////////
-    // Private functions
+    // Internal SC functions
     /////////////////////////////////////////////////////////////////////
     fn func_send_prize(&self, prize_info: &PrizeInfo<Self::Api>, winner_address: &ManagedAddress) {
 
@@ -480,68 +346,4 @@ pub trait Prize:
         );
     }
 
-    fn func_trigger(&self, iid: u32) -> SCResult<()> {
-
-        // Check validity of parameters
-        require!(self.get_instance_status(iid) == InstanceStatus::Ended, "Instance is not in the good state");
-        
-        // Get instance info & state
-        let instance_info = self.instance_info_mapper().get(&iid).unwrap();
-        let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
-
-        // Send rewards to sponsor
-        if instance_state.sponsor_rewards_pool > BigUint::zero() {
-            self.send().direct_egld(
-                &instance_info.sponsor_info.address,
-                &instance_state.sponsor_rewards_pool,
-                b"Sponsor rewards",
-            );
-        }
-
-        if self.instance_players_vec_mapper(iid).len() == 0 {
-            // No player, give prize back to instance sponsor
-            instance_state.winner_info.address = instance_info.sponsor_info.address.clone();
-        } 
-        else {
-            // Choose winner
-            let mut rand = RandomnessSource::<Self::Api>::new();       
-            let winner_address_index = rand.next_usize_in_range(1, self.instance_players_vec_mapper(iid).len() + 1);
-            instance_state.winner_info.ticket_number = winner_address_index.clone();
-            instance_state.winner_info.address = self.instance_players_vec_mapper(iid).get(winner_address_index);
-        }
-
-        // Prize auto-distribution if enabled
-        if self.param_manual_claim_mapper().get() == false {
-            // Send prize to winner address
-            self.func_send_prize(&instance_info.prize_info, &instance_state.winner_info.address);
-
-            // Update claimed status
-            instance_state.claimed_status = true;
-        }
-
-        // Record new instance state
-        self.instance_state_mapper().insert(iid, instance_state);          
-
-        Ok(())
-    }
-
-    /////////////////////////////////////////////////////////////////////
-    // Mappers
-    /////////////////////////////////////////////////////////////////////
-
-    // Instance counter
-    #[storage_mapper("iid_counter")]
-    fn iid_counter_mapper(&self) -> SingleValueMapper<u32>;
-
-    // Instance info & state
-    #[storage_mapper("instance_info")]
-    fn instance_info_mapper(&self) -> MapMapper<u32, InstanceInfo<Self::Api>>;
-    #[storage_mapper("instance_state")]
-    fn instance_state_mapper(&self) -> MapMapper<u32, InstanceState<Self::Api>>;
-
-    // Instance players
-    #[storage_mapper("instance_players_set")]
-    fn instance_players_set_mapper(&self, iid: u32) -> SetMapper<ManagedAddress>;
-    #[storage_mapper("instance_players_vec")]
-    fn instance_players_vec_mapper(&self, iid: u32) -> VecMapper<ManagedAddress>;
 }

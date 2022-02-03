@@ -1,11 +1,38 @@
 elrond_wasm::imports!();
 
-#[elrond_wasm::module]
-pub trait SecurityModule {
 
-/////////////////////////////////////////////////////////////////////
+use super::instance;
+use super::instance::InstanceStatus;
+
+////////////////////////////////////////////////////////////////////
+// Functions
+////////////////////////////////////////////////////////////////////
+#[elrond_wasm::module]
+pub trait SecurityModule:
+    instance::InstanceModule {
+
+    /////////////////////////////////////////////////////////////////////
     // Endpoints
     /////////////////////////////////////////////////////////////////////
+    #[endpoint(disable)]
+    fn disable_instance(&self, iid: u32, disable_status: bool) -> SCResult<()> {
+        only_owner!(self, "Caller address not allowed");
+        require!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
+        
+        // Retrieve instance state
+        let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
+        
+        if instance_state.disabled != disable_status {
+            instance_state.disabled = disable_status;
+            self.instance_state_mapper().insert(iid, instance_state);
+
+            Ok(())
+        }
+        else{
+            sc_error!("Instance is already in the expected disable state")
+        }
+    } 
+
     #[endpoint(addAddrBlacklist)]
     fn add_addr_blacklist(&self, address: ManagedAddress) -> SCResult<()> {
         only_owner!(self, "Caller address not allowed");
