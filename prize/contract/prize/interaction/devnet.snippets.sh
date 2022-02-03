@@ -58,7 +58,7 @@ disable() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="disable" --arguments $1 $2 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
- getFeePool() {
+getFeePool() {
     erdpy --verbose contract query ${ADDRESS} --function="getFeePool" --proxy=${PROXY} 
 }
 
@@ -67,8 +67,17 @@ setParamManClaim() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setParamManClaim" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
- getParamManClaim() {
+getParamManClaim() {
     erdpy --verbose contract query ${ADDRESS} --function="getParamManClaim" --proxy=${PROXY} 
+}
+
+# Param1 : max instances per sponsor
+setParamNbMaxInstancesPerSponsor() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setParamNbMaxInstancesPerSponsor" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
+getParamNbMaxInstancesPerSponsor() {
+    erdpy --verbose contract query ${ADDRESS} --function="getParamNbMaxInstancesPerSponsor" --proxy=${PROXY} 
 }
 
 # Param1 : min duration
@@ -77,11 +86,11 @@ setParamDuration() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setParamDuration" --arguments $1 $2 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
- getParamDuration() {
+getParamDuration() {
     erdpy --verbose contract query ${ADDRESS} --function="getParamDuration" --proxy=${PROXY} 
 }
 
- getAddrBlacklist() {
+getAddrBlacklist() {
     erdpy --verbose contract query ${ADDRESS} --function="getAddrBlacklist" --proxy=${PROXY} 
 }
 

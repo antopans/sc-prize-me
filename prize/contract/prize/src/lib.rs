@@ -29,6 +29,7 @@ pub trait Prize:
     fn init(&self) -> SCResult<()> {
         const DEFAULT_MIN_DURATION: u64 = 60;           // 60 seconds
         const DEFAULT_MAX_DURATION: u64 = 60*60*24*365; // 1 year
+        const DEFAULT_MAX_NB_INSTANCES_PER_SPONSOR: u32 = 20;
         
         // Initializations @ deployment only 
 
@@ -37,6 +38,7 @@ pub trait Prize:
 
         // Parameters
         self.param_manual_claim_mapper().set_if_empty(&false);
+        self.param_nb_max_instances_per_sponsor_mapper().set_if_empty(&DEFAULT_MAX_NB_INSTANCES_PER_SPONSOR);
         self.param_duration_min_mapper().set_if_empty(&DEFAULT_MIN_DURATION);              
         self.param_duration_max_mapper().set_if_empty(&DEFAULT_MAX_DURATION); 
 
@@ -110,7 +112,9 @@ pub trait Prize:
     fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
 
         // Check validity of parameters
-        require_with_opt!(self.address_blacklist_set_mapper().contains(&self.blockchain().get_caller()) == false, "Caller blacklisted");
+        let caller = self.blockchain().get_caller();
+        require_with_opt!(self.address_blacklist_set_mapper().contains(&caller) == false, "Caller blacklisted");
+        require_with_opt!(self.get_nb_sponsor_running(caller.clone()) < self.get_param_nb_max_instances_per_sponsor(), "Max instances reached for this sponsor");
         require_with_opt!(duration_in_s >= self.param_duration_min_mapper().get(), "Duration out of allowed range");
         require_with_opt!(duration_in_s <= self.param_duration_max_mapper().get(), "Duration out of allowed range");
         require_with_opt!(token_amount > 0, "Prize cannot be null");
@@ -121,7 +125,7 @@ pub trait Prize:
         // Aggregate instance information
         let instance_info = InstanceInfo {
             sponsor_info: SponsorInfo {
-                address: self.blockchain().get_caller(),
+                address: caller,
                 pseudo: pseudo,
                 url: url,
                 logo_link: logo_link,
@@ -402,9 +406,9 @@ pub trait Prize:
         let mut sponsor_iids = VarArgs::new();
 
         // Return all instances IDs with sponsor address matching the one provided in parameter
-        for instance in self.instance_info_mapper().iter() {
-            if instance.1.sponsor_info.address.clone() == sponsor_address {
-                sponsor_iids.push(instance.0);
+        for (iid, instance_info) in self.instance_info_mapper().iter() {
+            if instance_info.sponsor_info.address.clone() == sponsor_address {
+                sponsor_iids.push(iid);
             }
         }
 
@@ -444,6 +448,22 @@ pub trait Prize:
 
         Ok_some!(result)
     }
+
+    #[view(getNbSponsorRunning)]
+    fn get_nb_sponsor_running(&self, sponsor_address: ManagedAddress) -> u32 {
+        let mut nb_instances: u32 = 0;
+
+        // Compute number of running instances for a specific sponsor
+        for (iid, instance_info) in self.instance_info_mapper().iter() {
+           
+            if instance_info.sponsor_info.address.clone() == sponsor_address && self.get_instance_status(iid) == InstanceStatus::Running {
+                nb_instances += 1;
+            }
+        }
+
+        return nb_instances;
+    }
+
 
     /////////////////////////////////////////////////////////////////////
     // Private functions
