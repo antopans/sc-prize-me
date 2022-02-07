@@ -1,15 +1,17 @@
 elrond_wasm::imports!();
 
-
 use super::instance;
 use super::instance::InstanceStatus;
+
+use super::event;
 
 ////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////
 #[elrond_wasm::module]
 pub trait SecurityModule:
-    instance::InstanceModule {
+    instance::InstanceModule
+    +event::EventModule {
 
     /////////////////////////////////////////////////////////////////////
     // Endpoints
@@ -26,6 +28,9 @@ pub trait SecurityModule:
             instance_state.disabled = disable_status;
             self.instance_state_mapper().insert(iid, instance_state);
 
+            // Log event
+            self.event_wrapper_disable_instance(iid, disable_status);
+
             Ok(())
         }
         else{
@@ -37,7 +42,11 @@ pub trait SecurityModule:
     fn add_addr_blacklist(&self, address: ManagedAddress) -> SCResult<()> {
         only_owner!(self, "Caller address not allowed");
         
-        if self.address_blacklist_set_mapper().insert(address) == true {
+        if self.address_blacklist_set_mapper().insert(address.clone()) == true {
+
+            // Log event
+            self.event_wrapper_add_addr_blacklist(&address);
+
             Ok(())
         }
         else {
@@ -50,6 +59,10 @@ pub trait SecurityModule:
         only_owner!(self, "Caller address not allowed");
         
         if self.address_blacklist_set_mapper().remove(&address) == true {
+            
+            // Log event
+            self.event_wrapper_rm_addr_blacklist(&address);
+
             Ok(())
         }
         else {

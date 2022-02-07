@@ -11,6 +11,7 @@ mod player;
 mod security;
 mod parameter;
 mod fee;
+mod event;
 mod macros;
 
 use instance::*;
@@ -40,7 +41,8 @@ pub trait Prize:
     +player::PlayerModule
     +security::SecurityModule 
     +parameter::ParameterModule
-    +fee::FeeModule {
+    +fee::FeeModule
+    +event::EventModule {
     
     /////////////////////////////////////////////////////////////////////
     // SC Management endpoints
@@ -68,6 +70,9 @@ pub trait Prize:
         // Fees
         self.init_fees_if_empty(BigUint::from(DEFAULT_FEE_AMOUNT_EGLD), DEFAULT_SPONSOR_REWARD_PERCENT);
 
+        // Event
+        self.log_enable_mapper().set_if_empty(&false);
+
         Ok(())
     }
 
@@ -87,18 +92,18 @@ pub trait Prize:
             let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
 
             // Send rewards to sponsor
-            self.pay_rewards_to_sponsor(*iid, instance_info.sponsor_info.address.clone());
+            self.pay_rewards_to_sponsor(iid.clone(), instance_info.sponsor_info.address.clone());
 
-            if self.instance_players_vec_mapper(*iid).len() == 0 {
+            if self.instance_players_vec_mapper(iid.clone()).len() == 0 {
                 // No player, give prize back to instance sponsor
                 instance_state.winner_info.address = instance_info.sponsor_info.address.clone();
             } 
             else {
                 // Choose winner
                 let mut rand = RandomnessSource::<Self::Api>::new();       
-                let winner_address_index = rand.next_usize_in_range(1, self.instance_players_vec_mapper(*iid).len() + 1);
+                let winner_address_index = rand.next_usize_in_range(1, self.instance_players_vec_mapper(iid.clone()).len() + 1);
                 instance_state.winner_info.ticket_number = winner_address_index.clone();
-                instance_state.winner_info.address = self.instance_players_vec_mapper(*iid).get(winner_address_index);
+                instance_state.winner_info.address = self.instance_players_vec_mapper(iid.clone()).get(winner_address_index);
             }
 
             // Auto-distribution of prize if enabled
@@ -108,10 +113,16 @@ pub trait Prize:
 
                 // Update claimed status
                 instance_state.claimed_status = true;
-            }
 
+                // Log event
+                self.event_wrapper_auto_claim_prize(iid.clone());
+            }
+            
+            // Log event
+            self.event_wrapper_trigger(iid.clone(), instance_state.winner_info.ticket_number, &instance_state.winner_info.address);
+            
             // Record new instance state
-            self.instance_state_mapper().insert(*iid, instance_state);   
+            self.instance_state_mapper().insert(iid.clone(), instance_state);   
         }
 
         Ok(())
@@ -128,6 +139,9 @@ pub trait Prize:
             self.instance_players_vec_mapper(iid.clone()).clear();
             self.instance_info_mapper().remove(&iid);
             self.instance_state_mapper().remove(&iid);
+
+            // Log event
+            self.event_wrapper_clean_claim(iid.clone());
         }
 
         Ok(())
@@ -154,16 +168,16 @@ pub trait Prize:
         // Aggregate instance information
         let instance_info = InstanceInfo {
             sponsor_info: SponsorInfo {
-                address: caller,
-                pseudo: pseudo,
-                url: url,
-                logo_link: logo_link,
-                free_text: free_text},
+                address: caller.clone(),
+                pseudo: pseudo.clone(),
+                url: url.clone(),
+                logo_link: logo_link.clone(),
+                free_text: free_text.clone()},
             prize_info: PrizeInfo {
                 prize_type: if token_identifier.is_egld() {PrizeType::EgldPrize} else if token_identifier.is_esdt() {PrizeType::EsdtPrize} else {PrizeType::UnknownPrize},
-                token_identifier: token_identifier,
+                token_identifier: token_identifier.clone(),
                 token_nonce: token_nonce,
-                token_amount: token_amount},
+                token_amount: token_amount.clone()},
             deadline: self.blockchain().get_block_timestamp() + duration_in_s
         };
 
@@ -183,6 +197,9 @@ pub trait Prize:
         self.iid_counter_mapper().set(&new_iid);
         self.instance_info_mapper().insert(new_iid, instance_info);
         self.instance_state_mapper().insert(new_iid, instance_state);
+
+        // Log event
+        self.event_wrapper_create_instance(&caller, new_iid, &token_identifier, token_nonce, &token_amount, duration_in_s, &pseudo);
 
         // Format result
         Ok_some!(new_iid);
@@ -204,13 +221,17 @@ pub trait Prize:
         require_with_opt!(fees == self.fee_policy_mapper().get().fee_amount_egld, "Wrong fees amount");
 
         // Capitalize fees and set sponsor rewards
-        self.append_fees_ands_rewards(iid, fees);
+        self.append_fees_and_rewards(iid, fees.clone());
         
         // Add caller address to participants for this instance
         self.instance_players_set_mapper(iid).insert(caller.clone());
         self.instance_players_vec_mapper(iid).push(&caller);
+        let ticket_number: usize = self.instance_players_vec_mapper(iid).len();
 
-        Ok_some!(self.instance_players_vec_mapper(iid).len());
+        // Log event
+        self.event_wrapper_play(&caller, iid, ticket_number, &fees);
+
+        Ok_some!(ticket_number);
     }
 
     #[endpoint(claimPrize)]
@@ -230,6 +251,9 @@ pub trait Prize:
         // Update claimed status
         instance_state.claimed_status = true;
         self.instance_state_mapper().insert(iid, instance_state);
+
+        // Log event
+        self.event_wrapper_manual_claim_prize(iid);
 
         Ok(())
     }

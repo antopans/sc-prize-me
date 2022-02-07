@@ -108,6 +108,15 @@ rmAddrBlacklist() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="rmAddrBlacklist" --arguments "0x${HEX_ADDRESS}" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
+# Param1 : log enable status
+setLogEnableStatus() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setLogEnableStatus" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
+getLogEnableStatus() {
+    erdpy --verbose contract query ${ADDRESS} --function="getLogEnableStatus" --proxy=${PROXY} 
+}
+
 ######################################################################
 # DApp endpoints : sponsor API
 ######################################################################

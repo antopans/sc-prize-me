@@ -1,0 +1,29 @@
+{
+	"name": "rmAddrBlacklist endpoint bad caller",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "rmAddrBlacklist",
+			"comment": "non admin tries to call rmAddrBlacklist endpoint",
+			"tx": {
+				"from": "address:sponsorEGLD",
+				"to": "sc:prize",
+				"egldValue": "0",
+				"function": "rmAddrBlacklist",
+				"arguments": [
+					"address:player1"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "4",
+				"message":"str:Caller address not allowed",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}

@@ -1,0 +1,29 @@
+{
+	"name": "setLogEnableStatus endpoint bad caller",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "setLogEnableStatus",
+			"comment": "non admin tries to call setLogEnableStatus endpoint",
+			"tx": {
+				"from": "address:sponsorEGLD",
+				"to": "sc:prize",
+				"egldValue": "0",
+				"function": "setLogEnableStatus",
+				"arguments": [
+					"1"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "4",
+				"message":"str:Caller address not allowed",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}

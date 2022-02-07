@@ -25,6 +25,30 @@
 		{
 			"step": "externalSteps",
 			"path": "steps/admin_actions/admin_disable_bad_caller.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_set_param_manual_claim_bad_caller.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_set_param_nb_max_instances_per_sponsor_bad_caller.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_set_param_duration_bad_caller.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_add_addr_blacklist_bad_caller.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_rm_addr_blacklist_bad_caller.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_set_log_enable_status_bad_caller.steps.json"
 		}
 	]
 }

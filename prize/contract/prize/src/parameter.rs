@@ -1,10 +1,13 @@
 elrond_wasm::imports!();
 
+use super::event;
+
 ////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////
 #[elrond_wasm::module]
-pub trait ParameterModule {
+pub trait ParameterModule:
+    event::EventModule {
 
     /////////////////////////////////////////////////////////////////////
     // Endpoints
@@ -14,6 +17,10 @@ pub trait ParameterModule {
         only_owner!(self, "Caller address not allowed");
         
         self.param_manual_claim_mapper().update(|current_value| *current_value = manual_claim);
+
+        // Log event
+        self.event_wrapper_set_param_manual_claim(manual_claim);
+
         Ok(())
     }
 
@@ -22,6 +29,10 @@ pub trait ParameterModule {
         only_owner!(self, "Caller address not allowed");
         
         self.param_nb_max_instances_per_sponsor_mapper().update(|current_value| *current_value = nb_instances_max);
+
+        // Log event
+        self.event_wrapper_set_param_nb_max_instances_per_sponsor(nb_instances_max);
+
         Ok(())
     }
 
@@ -32,6 +43,10 @@ pub trait ParameterModule {
         
         self.param_duration_min_mapper().update(|current_value| *current_value = duration_min);
         self.param_duration_max_mapper().update(|current_value| *current_value = duration_max);
+
+        // Log event
+        self.event_wrapper_set_param_duration(duration_min, duration_max);
+
         Ok(())
     }
 

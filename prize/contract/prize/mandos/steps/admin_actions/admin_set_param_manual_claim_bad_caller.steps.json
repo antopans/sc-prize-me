@@ -1,0 +1,29 @@
+{
+	"name": "setParamManClaim endpoint bad caller",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "setParamManClaim",
+			"comment": "non admin tries to call setParamManClaim endpoint",
+			"tx": {
+				"from": "address:sponsorEGLD",
+				"to": "sc:prize",
+				"egldValue": "0",
+				"function": "setParamManClaim",
+				"arguments": [
+					"1"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "4",
+				"message":"str:Caller address not allowed",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}

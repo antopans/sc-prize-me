@@ -1,6 +1,8 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
+use super::event;
+
 /////////////////////////////////////////////////////////////////////
 // Types
 /////////////////////////////////////////////////////////////////////
@@ -16,7 +18,8 @@ pub struct FeePolicy<M: ManagedTypeApi> {
 // Functions
 /////////////////////////////////////////////////////////////////////
 #[elrond_wasm::module]
-pub trait FeeModule {
+pub trait FeeModule:
+    event::EventModule {
 
     /////////////////////////////////////////////////////////////////////
     // Endpoints
@@ -28,11 +31,14 @@ pub trait FeeModule {
 
         // Save fee policy
         let fee_policy = FeePolicy {
-            fee_amount_egld : fee_amount_egld,
-            sponsor_reward_percent : sponsor_reward_percent,
+            fee_amount_egld : fee_amount_egld.clone(),
+            sponsor_reward_percent : sponsor_reward_percent.clone(),
         };
 
         self.fee_policy_mapper().set(&fee_policy); 
+
+        // Log event
+        self.event_wrapper_set_fee_policy(&fee_amount_egld, sponsor_reward_percent);
 
         Ok(())
     }
@@ -41,10 +47,15 @@ pub trait FeeModule {
     fn claim_fees(&self) -> SCResult<()> {
         only_owner!(self, "Caller address not allowed");
         require!(self.fee_pool_mapper().get() != BigUint::zero(), "No fees to claim");
+
+        let fee_amount: BigUint = self.fee_pool_mapper().get();
         
         // Claim fees and clear the pool
-        self.send().direct_egld(&self.blockchain().get_owner_address(), &self.fee_pool_mapper().get(), b"Fees from pool claimed");
+        self.send().direct_egld(&self.blockchain().get_owner_address(), &fee_amount, b"Fees from pool claimed");
         self.fee_pool_mapper().clear();
+
+        // Log event
+        self.event_wrapper_claim_fees(&fee_amount);
 
         Ok(())
     }
@@ -84,22 +95,25 @@ pub trait FeeModule {
         self.reward_pool_mapper(iid).set(BigUint::zero());
     }
 
-    fn append_fees_ands_rewards(&self, iid: u32, fees: BigUint) {
+    fn append_fees_and_rewards(&self, iid: u32, fees: BigUint) {
         // Capitalize fees and set sponsor rewards
         if fees != BigUint::zero() {
             let reward_percent = BigUint::from(self.reward_percent_mapper(iid).get());
             let mut reward_pool = self.reward_pool_mapper(iid).get();
 
             // Compute sponsor rewards
-            let reward_amount: BigUint = fees.clone() * reward_percent / BigUint::from(100u8);
-            let remaining_fees: BigUint = fees - reward_amount.clone();
+            let reward_amount: BigUint = fees.clone() * reward_percent.clone() / BigUint::from(100u8);
+            let remaining_fees: BigUint = fees.clone() - reward_amount.clone();
 
             // Add rewards to sponsor rewards pool
-            reward_pool += reward_amount;
+            reward_pool += reward_amount.clone();
             self.reward_pool_mapper(iid).set(reward_pool);
 
             // Add fees to pool
-            self.fee_pool_mapper().update(|current_fees| *current_fees += remaining_fees);
+            self.fee_pool_mapper().update(|current_fees| *current_fees += remaining_fees.clone());
+
+            // Log event
+            self.event_wrapper_append_fees_and_rewards(iid, &fees, &reward_percent, &reward_amount, &remaining_fees); 
         }
     }
 
@@ -113,6 +127,9 @@ pub trait FeeModule {
                 &reward_pool,
                 b"Sponsor rewards",
             );
+            
+            // Log event
+            self.event_wrapper_send_rewards(iid, &reward_pool);
 
             // Clear mappers for this instance
             self.reward_pool_mapper(iid).clear();

@@ -1,0 +1,31 @@
+{
+	"name": "setParamDuration endpoint bad caller",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "setParamDuration",
+			"comment": "non admin tries to call setParamDuration endpoint",
+			"tx": {
+				"from": "address:sponsorEGLD",
+				"to": "sc:prize",
+				"egldValue": "0",
+				"function": "setParamDuration",
+				"arguments": [
+					"60",
+					"120"
+
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "4",
+				"message":"str:Caller address not allowed",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}
