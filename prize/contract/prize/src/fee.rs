@@ -89,54 +89,26 @@ pub trait FeeModule:
         });
     }
 
-    fn init_rewards(&self, iid: u32) {
-        // Initialize sponsor rewards @ instance creation
-        self.reward_percent_mapper(iid).set(self.fee_policy_mapper().get().sponsor_reward_percent);
-        self.reward_pool_mapper(iid).set(BigUint::zero());
-    }
+    fn update_fees_and_compute_rewards(&self, fees: BigUint, reward_percent: BigUint) -> BigUint {
+        let mut reward_amount: BigUint = BigUint::zero();
 
-    fn append_fees_and_rewards(&self, iid: u32, fees: BigUint) {
-        // Capitalize fees and set sponsor rewards
+        // Capitalize fees and compute sponsor rewards
         if fees != BigUint::zero() {
-            let reward_percent = BigUint::from(self.reward_percent_mapper(iid).get());
-            let mut reward_pool = self.reward_pool_mapper(iid).get();
 
             // Compute sponsor rewards
-            let reward_amount: BigUint = fees.clone() * reward_percent.clone() / BigUint::from(100u8);
+            reward_amount = fees.clone() * reward_percent.clone() / BigUint::from(100u8);
             let remaining_fees: BigUint = fees.clone() - reward_amount.clone();
-
-            // Add rewards to sponsor rewards pool
-            reward_pool += reward_amount.clone();
-            self.reward_pool_mapper(iid).set(reward_pool);
 
             // Add fees to pool
             self.fee_pool_mapper().update(|current_fees| *current_fees += remaining_fees.clone());
 
             // Log event
-            self.event_wrapper_append_fees_and_rewards(iid, &fees, &reward_percent, &reward_amount, &remaining_fees); 
+            self.event_wrapper_fee_pool_info(&self.fee_pool_mapper().get()); 
         }
+
+        // Return computed rewards
+        return reward_amount;
     }
-
-    fn pay_rewards_to_sponsor(&self, iid: u32, sponsor_address: ManagedAddress) {
-        // Send rewards to sponsor
-        let reward_pool = self.reward_pool_mapper(iid).get();
-
-        if reward_pool > BigUint::zero() {
-            self.send().direct_egld(
-                &sponsor_address,
-                &reward_pool,
-                b"Sponsor rewards",
-            );
-            
-            // Log event
-            self.event_wrapper_send_rewards(iid, &reward_pool);
-
-            // Clear mappers for this instance
-            self.reward_pool_mapper(iid).clear();
-            self.reward_percent_mapper(iid).clear();
-        }
-    }
-
 
     /////////////////////////////////////////////////////////////////////
     // Mappers
@@ -149,11 +121,4 @@ pub trait FeeModule:
     // Fee  pool for SC owner
     #[storage_mapper("fee_pool")]
     fn fee_pool_mapper(&self) -> SingleValueMapper<BigUint>;
-
-    // Rewards for sponsor
-    #[storage_mapper("reward_percent")]
-    fn reward_percent_mapper(&self, iid: u32) -> SingleValueMapper<u8>;
-
-    #[storage_mapper("reward_pool")]
-    fn reward_pool_mapper(&self, iid: u32) -> SingleValueMapper<BigUint>;
 }

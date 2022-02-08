@@ -88,22 +88,28 @@ pub trait EventModule {
         }
     }
 
-    fn event_wrapper_append_fees_and_rewards(
+    fn event_wrapper_fee_pool_info(
         &self,
-        iid: u32,
-        fees: &BigUint,
-        reward_percent: &BigUint,
-        reward_amount: &BigUint,
-        remaining_fees: &BigUint,
+        fee_pool: &BigUint
     ) {
         if self.log_enable_mapper().get() == true {
-            self.append_fees_and_rewards_event(
+            self.fee_pool_info_event(
+                self.blockchain().get_block_epoch(),
+                fee_pool
+            );
+        }
+    }
+
+    fn event_wrapper_reward_pool_info(
+        &self,
+        iid: u32,
+        reward_pool: &BigUint
+    ) {
+        if self.log_enable_mapper().get() == true {
+            self.reward_pool_info_event(
                 self.blockchain().get_block_epoch(),
                 iid,
-                fees,
-                reward_percent,
-                reward_amount,
-                remaining_fees
+                reward_pool
             );
         }
     }
@@ -298,16 +304,19 @@ pub trait EventModule {
         #[indexed] winner_address: &ManagedAddress
     ); 
 
-    #[event("append_fees_and_rewards")]
-    fn append_fees_and_rewards_event(
+    #[event("fee_pool_info")]
+    fn fee_pool_info_event(
+        &self,
+        #[indexed] epoch: u64,
+        #[indexed] fees: &BigUint
+    );
+
+    #[event("reward_pool_info")]
+    fn reward_pool_info_event(
         &self,
         #[indexed] epoch: u64,
         #[indexed] iid: u32,
-        #[indexed] fees: &BigUint,
-        #[indexed] reward_percent: &BigUint,
-        #[indexed] reward_amount: &BigUint,
-        #[indexed] remaining_fees: &BigUint,
-
+        #[indexed] reward_pool: &BigUint
     );
 
     #[event("send_rewards")]

@@ -92,7 +92,7 @@ pub trait Prize:
             let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
 
             // Send rewards to sponsor
-            self.pay_rewards_to_sponsor(iid.clone(), instance_info.sponsor_info.address.clone());
+            self.pay_rewards_to_sponsor(iid.clone(), instance_info.sponsor_info.address.clone(), instance_state.reward_info.pool.clone());
 
             if self.instance_players_vec_mapper(iid.clone()).len() == 0 {
                 // No player, give prize back to instance sponsor
@@ -184,14 +184,14 @@ pub trait Prize:
         // Initialize instance state
         let instance_state = InstanceState {
             claimed_status: false,
+            reward_info: RewardInfo {
+                percent: self.fee_policy_mapper().get().sponsor_reward_percent,
+                pool: BigUint::zero()},
             winner_info: WinnerInfo {
                 ticket_number: 0usize,
                 address: ManagedAddress::zero()},
             disabled: false,
         };
-
-        // Initialize sponsor rewards
-        self.init_rewards(new_iid);
 
         // Record new instance
         self.iid_counter_mapper().set(&new_iid);
@@ -220,8 +220,11 @@ pub trait Prize:
         require_with_opt!(self.instance_players_set_mapper(iid).contains(&caller) == false, "Player has already played");
         require_with_opt!(fees == self.fee_policy_mapper().get().fee_amount_egld, "Wrong fees amount");
 
-        // Capitalize fees and set sponsor rewards
-        self.append_fees_and_rewards(iid, fees.clone());
+        // Capitalize fees and sponsor rewards
+        let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
+        instance_state.reward_info.pool += self.update_fees_and_compute_rewards(fees.clone(), BigUint::from(instance_state.reward_info.percent));
+        self.event_wrapper_reward_pool_info(iid, &instance_state.reward_info.pool); 
+        self.instance_state_mapper().insert(iid, instance_state);
         
         // Add caller address to participants for this instance
         self.instance_players_set_mapper(iid).insert(caller.clone());
@@ -368,6 +371,20 @@ pub trait Prize:
             &prize_info.token_amount,
             b"Send prize",
         );
+    }
+
+    fn pay_rewards_to_sponsor(&self, iid: u32, sponsor_address: ManagedAddress, rewards: BigUint) {
+
+        if rewards > BigUint::zero() {
+            self.send().direct_egld(
+                &sponsor_address,
+                &rewards,
+                b"Sponsor rewards",
+            );
+            
+            // Log event
+            self.event_wrapper_send_rewards(iid, &rewards);
+        }
     }
 
 }

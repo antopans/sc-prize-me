@@ -56,6 +56,12 @@ pub struct InstanceInfo<M: ManagedTypeApi> {
 
 // State of instance, content depends on instance lifecycle
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
+pub struct RewardInfo<M: ManagedTypeApi> {
+    pub percent: u8,
+    pub pool: BigUint<M>,
+}
+
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct WinnerInfo<M: ManagedTypeApi> {
     pub ticket_number: usize,
     pub address: ManagedAddress<M>,
@@ -64,6 +70,7 @@ pub struct WinnerInfo<M: ManagedTypeApi> {
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct InstanceState<M: ManagedTypeApi> {
     pub claimed_status: bool,
+    pub reward_info: RewardInfo<M>,
     pub winner_info: WinnerInfo<M>,
     pub disabled: bool,
 }
