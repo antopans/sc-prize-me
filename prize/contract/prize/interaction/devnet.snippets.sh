@@ -47,24 +47,28 @@ cleanClaimed() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="cleanClaimed" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
-# Param1 : fees amount in EGLD
-# Param2 : sponsor reward in percent
-setFeePol() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setFeePol" --arguments $1 $2 --send --proxy=${PROXY} --chain=${CHAIN}
-}
-
-claimFees() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="claimFees" --send --proxy=${PROXY} --chain=${CHAIN}
-}
-
 # Param1 : Instance ID
 # Param2 : disable status
 disable() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="disable" --arguments $1 $2 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
+# Param1 : fees amount in EGLD
+# Param2 : sponsor reward in percent
+setFeePol() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setFeePol" --arguments $1 $2 --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
+getFeePol() {
+    erdpy --verbose contract query ${ADDRESS} --function="getFeePol" --proxy=${PROXY} 
+}
+
 getFeePool() {
     erdpy --verbose contract query ${ADDRESS} --function="getFeePool" --proxy=${PROXY} 
+}
+
+claimFees() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="claimFees" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # Param1 : manual claim enable status
@@ -208,10 +212,6 @@ claimPrize() {
 ######################################################################
 # DApp view API
 ######################################################################
-
- getFeePol() {
-    erdpy --verbose contract query ${ADDRESS} --function="getFeePol" --proxy=${PROXY} 
-}
 
  getNb() {
     erdpy --verbose contract query ${ADDRESS} --function="getNb" --proxy=${PROXY} 

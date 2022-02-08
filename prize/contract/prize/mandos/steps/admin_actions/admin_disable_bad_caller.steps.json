@@ -21,7 +21,7 @@
 				"out": [
 				],
 				"status": "4",
-				"message":"str:Caller address not allowed",
+				"message":"str:Endpoint can only be called by owner",
 				"gas": "*",
 				"refund": "*"
 			}

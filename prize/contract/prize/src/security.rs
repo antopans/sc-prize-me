@@ -16,9 +16,9 @@ pub trait SecurityModule:
     /////////////////////////////////////////////////////////////////////
     // Endpoints
     /////////////////////////////////////////////////////////////////////
+    #[only_owner]
     #[endpoint(disable)]
     fn disable_instance(&self, iid: u32, disable_status: bool) -> SCResult<()> {
-        only_owner!(self, "Caller address not allowed");
         require!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
         
         // Retrieve instance state
@@ -38,10 +38,9 @@ pub trait SecurityModule:
         }
     } 
 
+    #[only_owner]
     #[endpoint(addAddrBlacklist)]
-    fn add_addr_blacklist(&self, address: ManagedAddress) -> SCResult<()> {
-        only_owner!(self, "Caller address not allowed");
-        
+    fn add_addr_blacklist(&self, address: ManagedAddress) -> SCResult<()> {        
         if self.address_blacklist_set_mapper().insert(address.clone()) == true {
 
             // Log event
@@ -54,10 +53,9 @@ pub trait SecurityModule:
         }
     }
 
+    #[only_owner]
     #[endpoint(rmAddrBlacklist)]
-    fn rm_addr_blacklist(&self, address: ManagedAddress) -> SCResult<()> {
-        only_owner!(self, "Caller address not allowed");
-        
+    fn rm_addr_blacklist(&self, address: ManagedAddress) -> SCResult<()> {        
         if self.address_blacklist_set_mapper().remove(&address) == true {
             
             // Log event

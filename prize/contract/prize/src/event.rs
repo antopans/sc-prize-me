@@ -9,10 +9,9 @@ pub trait EventModule {
     /////////////////////////////////////////////////////////////////////
     // Endpoints
     /////////////////////////////////////////////////////////////////////
+    #[only_owner]
     #[endpoint(setLogEnableStatus)]
-    fn set_log_enable_status(&self, enable: bool) -> SCResult<()> {
-        only_owner!(self, "Caller address not allowed");
-        
+    fn set_log_enable_status(&self, enable: bool) -> SCResult<()> {       
         self.log_enable_mapper().update(|current_value| *current_value = enable);
         Ok(())
     }

@@ -12,10 +12,9 @@ pub trait ParameterModule:
     /////////////////////////////////////////////////////////////////////
     // Endpoints
     /////////////////////////////////////////////////////////////////////
+    #[only_owner]
     #[endpoint(setParamManClaim)]
-    fn set_param_manual_claim(&self, manual_claim: bool) -> SCResult<()> {
-        only_owner!(self, "Caller address not allowed");
-        
+    fn set_param_manual_claim(&self, manual_claim: bool) -> SCResult<()> {    
         self.param_manual_claim_mapper().update(|current_value| *current_value = manual_claim);
 
         // Log event
@@ -24,10 +23,9 @@ pub trait ParameterModule:
         Ok(())
     }
 
+    #[only_owner]
     #[endpoint(setParamNbMaxInstancesPerSponsor)]
-    fn set_param_nb_max_instances_per_sponsor(&self, nb_instances_max: u32) -> SCResult<()> {
-        only_owner!(self, "Caller address not allowed");
-        
+    fn set_param_nb_max_instances_per_sponsor(&self, nb_instances_max: u32) -> SCResult<()> {        
         self.param_nb_max_instances_per_sponsor_mapper().update(|current_value| *current_value = nb_instances_max);
 
         // Log event
@@ -36,9 +34,9 @@ pub trait ParameterModule:
         Ok(())
     }
 
+    #[only_owner]
     #[endpoint(setParamDuration)]
     fn set_param_duration(&self, duration_min: u64, duration_max: u64) -> SCResult<()> {
-        only_owner!(self, "Caller address not allowed");
         require!(duration_min <= duration_max, "Min duration must be lower or equal to Max duration");
         
         self.param_duration_min_mapper().update(|current_value| *current_value = duration_min);

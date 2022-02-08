@@ -80,10 +80,9 @@ pub trait Prize:
     // Administrator endpoints
     /////////////////////////////////////////////////////////////////////
 
+    #[only_owner]
     #[endpoint(triggerEnded)]
     fn trigger_ended_instances(&self) -> SCResult<()> {
-        only_owner!(self, "Caller address not allowed");
-
         let ended_instances: VarArgs<u32> = self.get_instance_ids(MultiArgVec(Vec::from([InstanceStatus::Ended])));
 
         for iid in ended_instances.iter() {
@@ -94,16 +93,19 @@ pub trait Prize:
             // Send rewards to sponsor
             self.pay_rewards_to_sponsor(iid.clone(), instance_info.sponsor_info.address.clone(), instance_state.reward_info.pool.clone());
 
-            if self.instance_players_vec_mapper(iid.clone()).len() == 0 {
+            // Choose winner
+            let nb_players: usize = self.get_nb_players(iid.clone());
+
+            if  nb_players == 0 {
                 // No player, give prize back to instance sponsor
                 instance_state.winner_info.address = instance_info.sponsor_info.address.clone();
             } 
             else {
-                // Choose winner
+                // Choose random ticket number
                 let mut rand = RandomnessSource::<Self::Api>::new();       
-                let winner_address_index = rand.next_usize_in_range(1, self.instance_players_vec_mapper(iid.clone()).len() + 1);
-                instance_state.winner_info.ticket_number = winner_address_index.clone();
-                instance_state.winner_info.address = self.instance_players_vec_mapper(iid.clone()).get(winner_address_index);
+                let winning_ticket = rand.next_usize_in_range(1, nb_players + 1);
+                instance_state.winner_info.ticket_number = winning_ticket.clone();
+                instance_state.winner_info.address = self.get_ticket_owner(iid.clone(), winning_ticket);
             }
 
             // Auto-distribution of prize if enabled
@@ -128,15 +130,13 @@ pub trait Prize:
         Ok(())
     }
 
+    #[only_owner]
     #[endpoint(cleanClaimed)]
-    fn clean_claimed_instances(&self) -> SCResult<()> {
-        only_owner!(self, "Caller address not allowed");
-        
+    fn clean_claimed_instances(&self) -> SCResult<()> {        
         let claimed_instances: VarArgs<u32> = self.get_instance_ids(MultiArgVec(Vec::from([InstanceStatus::Claimed])));
 
         for iid in claimed_instances.iter() {
-            self.instance_players_set_mapper(iid.clone()).clear();
-            self.instance_players_vec_mapper(iid.clone()).clear();
+            self.clear_players(iid.clone());
             self.instance_info_mapper().remove(&iid);
             self.instance_state_mapper().remove(&iid);
 
@@ -217,7 +217,7 @@ pub trait Prize:
         let caller = self.blockchain().get_caller();
         require_with_opt!(self.address_blacklist_set_mapper().contains(&caller) == false, "Caller blacklisted");
         require_with_opt!(self.get_instance_status(iid) == InstanceStatus::Running, "Instance is not active");
-        require_with_opt!(self.instance_players_set_mapper(iid).contains(&caller) == false, "Player has already played");
+        require_with_opt!(self.has_played(iid, caller.clone()) == false, "Player has already played");
         require_with_opt!(fees == self.fee_policy_mapper().get().fee_amount_egld, "Wrong fees amount");
 
         // Capitalize fees and sponsor rewards
@@ -227,9 +227,7 @@ pub trait Prize:
         self.instance_state_mapper().insert(iid, instance_state);
         
         // Add caller address to participants for this instance
-        self.instance_players_set_mapper(iid).insert(caller.clone());
-        self.instance_players_vec_mapper(iid).push(&caller);
-        let ticket_number: usize = self.instance_players_vec_mapper(iid).len();
+        let ticket_number: usize = self.add_player(iid, &caller);
 
         // Log event
         self.event_wrapper_play(&caller, iid, ticket_number, &fees);
@@ -273,7 +271,7 @@ pub trait Prize:
 
         Ok_some!(MultiArg4((
             self.get_instance_status(iid),
-            self.instance_players_set_mapper(iid).len(),
+            self.get_nb_players(iid),
             self.instance_state_mapper().get(&iid).unwrap().winner_info.address,
             self.instance_info_mapper().get(&iid).unwrap())))
     }   
@@ -299,7 +297,7 @@ pub trait Prize:
                         let result_vec_item = MultiArg5((
                             iid,
                             self.get_instance_status(iid), 
-                            self.instance_players_set_mapper(iid).len(),
+                            self.get_nb_players(iid),
                             self.instance_state_mapper().get(&iid).unwrap().winner_info.address,
                             self.instance_info_mapper().get(&iid).unwrap(),
                         ));
@@ -323,7 +321,7 @@ pub trait Prize:
         Ok_some!(GetInfoStruct {
             iid: iid,
             instance_status: self.get_instance_status(iid),
-            number_of_players: self.instance_players_set_mapper(iid).len(),
+            number_of_players: self.get_nb_players(iid),
             winner_info: self.instance_state_mapper().get(&iid).unwrap().winner_info,
             sponsor_info: instance_info.sponsor_info,
             prize_info: instance_info.prize_info,

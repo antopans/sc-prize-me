@@ -24,9 +24,9 @@ pub trait FeeModule:
     /////////////////////////////////////////////////////////////////////
     // Endpoints
     /////////////////////////////////////////////////////////////////////
+    #[only_owner]
     #[endpoint(setFeePol)]
     fn set_fee_policy(&self, fee_amount_egld: BigUint, sponsor_reward_percent: u8) -> SCResult<()> {
-        only_owner!(self, "Caller address not allowed");
         require!(sponsor_reward_percent <= 100, "Wrong value for sponsor reward");
 
         // Save fee policy
@@ -43,9 +43,9 @@ pub trait FeeModule:
         Ok(())
     }
 
+    #[only_owner]
     #[endpoint(claimFees)]
     fn claim_fees(&self) -> SCResult<()> {
-        only_owner!(self, "Caller address not allowed");
         require!(self.fee_pool_mapper().get() != BigUint::zero(), "No fees to claim");
 
         let fee_amount: BigUint = self.fee_pool_mapper().get();
