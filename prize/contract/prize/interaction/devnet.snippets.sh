@@ -30,6 +30,11 @@ upgrade() {
     erdpy --verbose contract upgrade ${ADDRESS} --bytecode ${BYTECODE} --recall-nonce --pem=${OWNER} --gas-limit=500000000 --send --outfile="deploy-devnet.interaction.json" --proxy=${PROXY} --chain=${CHAIN} || return
 }
 
+claimDeveloperRewards()
+{
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="ClaimDeveloperRewards" --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
 ######################################################################
 # Administrator API
 ######################################################################
