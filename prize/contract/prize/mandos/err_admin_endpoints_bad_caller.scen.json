@@ -24,6 +24,10 @@
 		},
 		{
 			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_setPremium_bad_caller.steps.json"
+		},
+		{
+			"step": "externalSteps",
 			"path": "steps/admin_actions/admin_disable_bad_caller.steps.json"
 		},
 		{
