@@ -29,6 +29,7 @@ pub struct GetInfoStruct<M: ManagedTypeApi> {
     pub winner_info: WinnerInfo<M>,
     pub sponsor_info: SponsorInfo<M>,
     pub prize_info: PrizeInfo<M>,
+    pub premium: bool,
     pub deadline: u64,
 }
 
@@ -178,6 +179,7 @@ pub trait Prize:
                 token_identifier: token_identifier.clone(),
                 token_nonce: token_nonce,
                 token_amount: token_amount.clone()},
+            premium: false,
             deadline: self.blockchain().get_block_timestamp() + duration_in_s
         };
 
@@ -325,6 +327,7 @@ pub trait Prize:
             winner_info: self.instance_state_mapper().get(&iid).unwrap().winner_info,
             sponsor_info: instance_info.sponsor_info,
             prize_info: instance_info.prize_info,
+            premium: instance_info.premium,
             deadline: instance_info.deadline})
     }   
             

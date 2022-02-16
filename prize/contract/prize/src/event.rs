@@ -176,6 +176,20 @@ pub trait EventModule {
     }
 
     // Events occuring during setup
+    fn event_wrapper_set_premium(
+        &self,
+        iid: u32,
+        premium_status: bool
+    ) {
+        if self.log_enable_mapper().get() == true {
+            self.set_premium_event(
+                self.blockchain().get_block_epoch(),
+                iid,
+                premium_status
+            );
+        }
+    }
+
     fn event_wrapper_disable_instance(
         &self,
         iid: u32,
@@ -355,6 +369,14 @@ pub trait EventModule {
     ); 
 
     // Events occuring during setup
+    #[event("set_premium")]
+    fn set_premium_event(
+        &self,
+        #[indexed] epoch: u64,
+        #[indexed] iid: u32,
+        #[indexed] premium_status: bool
+    ); 
+
     #[event("disable_instance")]
     fn disable_instance_event(
         &self,

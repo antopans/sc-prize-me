@@ -1,12 +1,15 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
+////////////////////////////////////////////////////////////////////
+// Modules & uses
+////////////////////////////////////////////////////////////////////
 extern crate variant_count;
 use variant_count::VariantCount;
 
 use super::Ok_some;
 use super::require_with_opt;
-
+use super::event;
 
 ////////////////////////////////////////////////////////////////////
 // Types
@@ -51,6 +54,7 @@ pub struct PrizeInfo<M: ManagedTypeApi> {
 pub struct InstanceInfo<M: ManagedTypeApi> {
     pub sponsor_info: SponsorInfo<M>,
     pub prize_info: PrizeInfo<M>,
+    pub premium: bool,
     pub deadline: u64,
 }
 
@@ -80,11 +84,28 @@ pub struct InstanceState<M: ManagedTypeApi> {
 // Functions
 ////////////////////////////////////////////////////////////////////
 #[elrond_wasm::module]
-pub trait InstanceModule {
+pub trait InstanceModule:
+    event::EventModule {
 
     /////////////////////////////////////////////////////////////////////
     // Endpoints
     /////////////////////////////////////////////////////////////////////
+    #[only_owner]
+    #[endpoint(setPremium)]
+    fn set_premium(&self, iid: u32, premium_status: bool) -> SCResult<()> {    
+        //Checks
+        require!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
+
+        // Update premium status
+        let mut instance_info = self.instance_info_mapper().get(&iid).unwrap();
+        instance_info.premium = premium_status;
+        self.instance_info_mapper().insert(iid, instance_info);
+
+        // Log event
+        self.event_wrapper_set_premium(iid, premium_status);
+
+        Ok(())
+    }
 
     /////////////////////////////////////////////////////////////////////
     // Queries
