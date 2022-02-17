@@ -26,6 +26,8 @@ pub struct GetInfoStruct<M: ManagedTypeApi> {
     pub iid: u32,
     pub instance_status: InstanceStatus,
     pub number_of_players: usize,
+    pub has_played: bool,
+    pub has_won: bool,
     pub winner_info: WinnerInfo<M>,
     pub sponsor_info: SponsorInfo<M>,
     pub prize_info: PrizeInfo<M>,
@@ -314,17 +316,33 @@ pub trait Prize:
     }
 
     #[view(getInfo)]
-    fn get_instance_info(&self, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<GetInfoStruct<Self::Api>>> {
+    fn get_instance_info(&self, iid: u32, player_address: ManagedAddress) -> MultiResult2<SCResult<()>, OptionalResult<GetInfoStruct<Self::Api>>> {
         //Checks
         require_with_opt!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
 
+        // Instance information
         let instance_info = self.instance_info_mapper().get(&iid).unwrap();
 
+        // Instance state
+        let winner_info = self.instance_state_mapper().get(&iid).unwrap().winner_info;
+
+        // Played & won statuses
+        let mut has_played: bool = false;
+        let mut has_won: bool = false;
+
+        if player_address.clone().is_zero() == false {
+            has_played = self.has_played(iid, player_address.clone());
+            has_won = if (player_address == winner_info.address) {true} else {false};
+        }
+
+        // Return filled structure
         Ok_some!(GetInfoStruct {
             iid: iid,
             instance_status: self.get_instance_status(iid),
             number_of_players: self.get_nb_players(iid),
-            winner_info: self.instance_state_mapper().get(&iid).unwrap().winner_info,
+            has_played: has_played,
+            has_won: has_won,
+            winner_info: winner_info,
             sponsor_info: instance_info.sponsor_info,
             prize_info: instance_info.prize_info,
             premium: instance_info.premium,
@@ -333,7 +351,7 @@ pub trait Prize:
             
     #[view(getAllInfo)]
     // Returns : total number of filtered instances followed by information of all filtered instances
-    fn get_all_instance_info(&self, #[var_args] status_filter: VarArgs<InstanceStatus>) -> MultiArg2<usize, VarArgs<GetInfoStruct<Self::Api>>> {
+    fn get_all_instance_info(&self, player_address: ManagedAddress, #[var_args] status_filter: VarArgs<InstanceStatus>) -> MultiArg2<usize, VarArgs<GetInfoStruct<Self::Api>>> {
 
         let mut instances: VarArgs<GetInfoStruct<Self::Api>> = VarArgs::new();
         let mut status_filter_vec = status_filter.clone().into_vec();
@@ -349,7 +367,7 @@ pub trait Prize:
             for iid in self.instance_info_mapper().keys() {
                 for status in status_filter_vec.iter() {
                     if self.get_instance_status(iid) == status.clone() {
-                        instances.push(self.get_instance_info(iid).0.1.into_option().unwrap());
+                        instances.push(self.get_instance_info(iid, player_address.clone()).0.1.into_option().unwrap());
                         break;
                     }   
                 }

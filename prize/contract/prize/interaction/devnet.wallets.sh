@@ -12,3 +12,5 @@ PLAYER3="../../../wallets/devnet/player3.pem"
 PLAYER4="../../../wallets/devnet/player4.pem"
 PLAYER5="../../../wallets/devnet/player5.pem"
 PLAYER6="../../../wallets/devnet/player6.pem"
+
+ADDR_ZERO="0x0000000000000000000000000000000000000000000000000000000000000000"

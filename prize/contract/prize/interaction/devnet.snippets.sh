@@ -229,12 +229,32 @@ getStatus() {
 }
 
 # Param1 : Instance ID
+# Param2 : player pem wallet or empty string ""
 getInfo() {
-    erdpy --verbose contract query ${ADDRESS} --function="getInfo" --arguments $1 --proxy=${PROXY} 
+    if [[ $2 = "" ]]; then
+        PLAYER_HEX_ADDRESS=$ADDR_ZERO
+    else
+        BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $2`    
+        PLAYER_HEX_ADDRESS=`${SCRIPT_PATH}/${BECH32_UTIL} $BECH32_PEM_WALLET`
+        PLAYER_HEX_ADDRESS="0x${PLAYER_HEX_ADDRESS}"
+    fi
+    erdpy --verbose contract query ${ADDRESS} --function="getInfo" --arguments $1 $PLAYER_HEX_ADDRESS --proxy=${PROXY} 
 }
 
+# Param1 : player pem wallet or '0'
 # Var params : Instance status filter (from 1 to 5 status can be provided)
 getAllInfo() {
+    if [ $1 == "0" ]; then
+        PLAYER_HEX_ADDRESS=$ADDR_ZERO
+    else
+        BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $1`    
+        PLAYER_HEX_ADDRESS=`${SCRIPT_PATH}/${BECH32_UTIL} $BECH32_PEM_WALLET`
+        PLAYER_HEX_ADDRESS="0x${PLAYER_HEX_ADDRESS}"
+    fi
+    
+    # replace arg1 with hex address
+    set -- $PLAYER_HEX_ADDRESS "${@:2}"
+
     erdpy --verbose contract query ${ADDRESS} --function="getAllInfo" --arguments $* --proxy=${PROXY} 
 }
 
