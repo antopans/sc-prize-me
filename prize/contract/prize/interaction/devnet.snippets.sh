@@ -141,11 +141,15 @@ getLogEnableStatus() {
 createEgld() {
     EGLD_AMOUNT="10000000000000000"     #10000000000000000 => 0.01 EGLD
     PSEUDO="0x$(xxd -pu -c 256 <<< "Elrond")"
-    URL="0x$(xxd -pu -c 256  <<< "https://elrond.com/")"
+    URL1="0x$(xxd -pu -c 256  <<< "https://elrond.com/")"
+    URL2="0x$(xxd -pu -c 256  <<< "https://twitter.com/ElrondNetwork")"
+    URL3="0x$(xxd -pu -c 256  <<< "")"
+    URL4="0x$(xxd -pu -c 256  <<< "")"
+    URL5="0x$(xxd -pu -c 256  <<< "")"
     LOGO_LINK="0x$(xxd -pu -c 256  <<< "https://www.shutterstock.com/fr/image-vector/elrond-egld-token-coin-symbol-crypto-1912925707")"
     FREE_TEXT="0x$(xxd -pu -c 256  <<< "The Internet Scale Blockchain Is Live!")"
 
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=50000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL} ${LOGO_LINK} ${FREE_TEXT} --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=50000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${URL4} ${URL5} ${LOGO_LINK} ${FREE_TEXT} --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # Param #1 : duration in seconds
@@ -156,10 +160,14 @@ createEsdt() {
     SC_FUNCTION="$(xxd -pu -c 256 <<< "create")"
     DURATION=`printf "%02X" $1`; if [ $(expr ${#DURATION} % 2) != "0" ]; then DURATION="0${DURATION}"; fi
     PSEUDO="$(xxd -pu -c 256 <<< "Holoride")"
-    URL="$(xxd -pu -c 256  <<< "https://www.holoride.com/")"
+    URL1="$(xxd -pu -c 256  <<< "https://www.holoride.com/")"
+    URL2="$(xxd -pu -c 256  <<< "https://twitter.com/holoride")"
+    URL3="$(xxd -pu -c 256  <<< "https://www.instagram.com/holoride")"
+    URL4="$(xxd -pu -c 256  <<< "")"
+    URL5="$(xxd -pu -c 256  <<< "")"
     LOGO_LINK="$(xxd -pu -c 256  <<< "https://img2.storyblok.com/1440x0/smart/filters:format(webp)/f/113424/1920x1080/af849350b2/ride-token.png")"
     FREE_TEXT="$(xxd -pu -c 256  <<< "Win our new wonderful token !")"
-    TX_SC_CREATE_DATA="${SC_FUNCTION::-2}@${DURATION}@${PSEUDO}@${URL}@${LOGO_LINK}@${FREE_TEXT}"
+    TX_SC_CREATE_DATA="${SC_FUNCTION::-2}@${DURATION}@${PSEUDO}@${URL1}@${URL2}@${URL3}@${URL4}@${URL5}@${LOGO_LINK}@${FREE_TEXT}"
     
     TOKEN_ID="$(xxd -pu -c 256  <<< $3)"
     TOKEN_AMOUNT=`printf "%02X" $4`; if [ $(expr ${#TOKEN_AMOUNT} % 2) != "0" ]; then TOKEN_AMOUNT="0${TOKEN_AMOUNT}"; fi
@@ -183,10 +191,14 @@ createNft() {
     SC_FUNCTION="$(xxd -pu -c 256 <<< "create")"
     DURATION=`printf "%02X" $1`; if [ $(expr ${#DURATION} % 2) != "0" ]; then DURATION="0${DURATION}"; fi
     PSEUDO="$(xxd -pu -c 256 <<< "E-MOON")"
-    URL="$(xxd -pu -c 256  <<< "https://emoon.space/")"
+    URL1="$(xxd -pu -c 256  <<< "https://emoon.space/")"
+    URL2="$(xxd -pu -c 256  <<< "")"
+    URL3="$(xxd -pu -c 256  <<< "")"
+    URL4="$(xxd -pu -c 256  <<< "")"
+    URL5="$(xxd -pu -c 256  <<< "")"
     LOGO_LINK="$(xxd -pu -c 256  <<< "https://media.heartlandtv.com/images/HARVEST+MOON+SD.jpg")"
     FREE_TEXT="$(xxd -pu -c 256  <<< "Buy & sell NFTs !!!")"
-    TX_SC_CREATE_DATA="${SC_FUNCTION::-2}@${DURATION}@${PSEUDO}@${URL}@${LOGO_LINK}@${FREE_TEXT}"
+    TX_SC_CREATE_DATA="${SC_FUNCTION::-2}@${DURATION}@${PSEUDO}@${URL1}@${URL2}@${URL3}@${URL4}@${URL5}@${LOGO_LINK}@${FREE_TEXT}"
     
     TOKEN_ID="$(xxd -pu -c 256  <<< $3)"
     TOKEN_NONCE=`printf "%02X" $4`

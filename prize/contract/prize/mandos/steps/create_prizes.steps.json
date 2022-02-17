@@ -15,6 +15,10 @@
 					"u64:60",
 					"str:pseudo-sponsorEGLD",
 					"str:https://website-sponsorEGLD.com",
+					"str:",
+					"str:",
+					"str:",
+					"str:",
 					"str:https://website-sponsorEGLD.com/logo.svg",
 					"str:Welcome to my EGLD prize. Good luck !"
 				],
@@ -49,6 +53,10 @@
 					"u64:180",
 					"str:pseudo-sponsorESDT",
 					"str:https://website-sponsorESDT.com",
+					"str:",
+					"str:",
+					"str:",
+					"str:",
 					"str:https://website-sponsorESDT.com/logo.svg",
 					"str:Welcome to my ESDT prize. Good luck !"
 				],
@@ -84,6 +92,10 @@
 					"u64:3600",
 					"str:pseudo-sponsorNFT",
 					"str:https://website-sponsorNFT.com",
+					"str:",
+					"str:",
+					"str:",
+					"str:",
 					"str:https://website-sponsorNFT.com/logo.svg",
 					"str:Welcome to my NFT prize. Good luck !"
 				],
@@ -119,6 +131,10 @@
 					"u64:604800",
 					"str:pseudo-sponsorSFT",
 					"str:https://website-sponsorSFT.com",
+					"str:",
+					"str:",
+					"str:",
+					"str:",
 					"str:https://website-sponsorSFT.com/logo.svg",
 					"str:Welcome to my SFT prize. Good luck !"
 				],

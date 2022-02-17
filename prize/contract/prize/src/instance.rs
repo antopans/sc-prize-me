@@ -37,7 +37,11 @@ pub enum InstanceStatus {
 pub struct SponsorInfo<M: ManagedTypeApi> {
     pub address: ManagedAddress<M>,
     pub pseudo: ManagedBuffer<M>,
-    pub url: ManagedBuffer<M>,
+    pub url1: ManagedBuffer<M>,
+    pub url2: ManagedBuffer<M>,
+    pub url3: ManagedBuffer<M>,
+    pub url4: ManagedBuffer<M>,
+    pub url5: ManagedBuffer<M>,
     pub logo_link: ManagedBuffer<M>,
     pub free_text: ManagedBuffer<M>,
 }

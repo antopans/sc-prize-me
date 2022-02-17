@@ -155,7 +155,7 @@ pub trait Prize:
     /////////////////////////////////////////////////////////////////////
     #[payable("*")]
     #[endpoint(create)]
-    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
+    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url1: ManagedBuffer, url2: ManagedBuffer, url3: ManagedBuffer, url4: ManagedBuffer, url5: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
 
         // Check validity of parameters
         let caller = self.blockchain().get_caller();
@@ -173,7 +173,11 @@ pub trait Prize:
             sponsor_info: SponsorInfo {
                 address: caller.clone(),
                 pseudo: pseudo.clone(),
-                url: url.clone(),
+                url1: url1.clone(),
+                url2: url2.clone(),
+                url3: url3.clone(),
+                url4: url4.clone(),
+                url5: url5.clone(),
                 logo_link: logo_link.clone(),
                 free_text: free_text.clone()},
             prize_info: PrizeInfo {
