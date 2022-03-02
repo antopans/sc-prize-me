@@ -40,11 +40,11 @@ claimDeveloperRewards()
 ######################################################################
 
 triggerEnded() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="triggerEnded" --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=500000000 --function="triggerEnded" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 cleanClaimed() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="cleanClaimed" --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=500000000 --function="cleanClaimed" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # Param1 : Instance ID

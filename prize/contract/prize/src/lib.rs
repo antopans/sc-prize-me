@@ -7,6 +7,7 @@ elrond_wasm::derive_imports!();
 // Modules & uses
 ////////////////////////////////////////////////////////////////////
 mod instance;
+mod sponsor;
 mod player;
 mod security;
 mod parameter;
@@ -41,6 +42,7 @@ pub struct GetInfoStruct<M: ManagedTypeApi> {
 #[elrond_wasm::contract]
 pub trait Prize: 
     instance::InstanceModule
+    +sponsor::SponsorModule
     +player::PlayerModule
     +security::SecurityModule 
     +parameter::ParameterModule
@@ -128,6 +130,9 @@ pub trait Prize:
             
             // Record new instance state
             self.instance_state_mapper().insert(iid.clone(), instance_state);   
+
+            // Update nb of running instances for the sponsor
+            self.nb_instances_running_mapper(instance_info.sponsor_info.address).update(|current| *current -= 1);
         }
 
         Ok(())
@@ -156,11 +161,13 @@ pub trait Prize:
     #[payable("*")]
     #[endpoint(create)]
     fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url1: ManagedBuffer, url2: ManagedBuffer, url3: ManagedBuffer, url4: ManagedBuffer, url5: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
-
-        // Check validity of parameters
+        
         let caller = self.blockchain().get_caller();
+        self.nb_instances_running_mapper(caller.clone()).set_if_empty(&0u32);
+        
+        // Check validity of parameters
         require_with_opt!(self.address_blacklist_set_mapper().contains(&caller) == false, "Caller blacklisted");
-        require_with_opt!(self.get_nb_sponsor_running(caller.clone()) < self.get_param_nb_max_instances_per_sponsor(), "Max instances reached for this sponsor");
+        require_with_opt!(self.nb_instances_running_mapper(caller.clone()).get() < self.get_param_nb_max_instances_per_sponsor(), "Max instances reached for this sponsor");
         require_with_opt!(duration_in_s >= self.param_duration_min_mapper().get(), "Duration out of allowed range");
         require_with_opt!(duration_in_s <= self.param_duration_max_mapper().get(), "Duration out of allowed range");
         require_with_opt!(token_amount > 0, "Prize cannot be null");
@@ -205,6 +212,7 @@ pub trait Prize:
         self.iid_counter_mapper().set(&new_iid);
         self.instance_info_mapper().insert(new_iid, instance_info);
         self.instance_state_mapper().insert(new_iid, instance_state);
+        self.nb_instances_running_mapper(caller.clone()).update(|current| *current += 1);
 
         // Log event
         self.event_wrapper_create_instance(&caller, new_iid, &token_identifier, token_nonce, &token_amount, duration_in_s, &pseudo);

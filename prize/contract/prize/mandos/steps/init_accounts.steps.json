@@ -38,7 +38,7 @@
                                     "balance": "1",
                                     "creator": "sc:nft-minter",
                                     "royalties": "5000",
-                                    "uri": "str:www.mycoolnft.com/nft1.jpg",
+                                    "uri": ["str:www.mycoolnft.com/nft1.jpg"],
                                     "attributes": "u64:100,000"
                                 }
                             ]
@@ -57,7 +57,7 @@
                                     "balance": "10",
                                     "creator": "sc:sft-minter",
                                     "royalties": "0",
-                                    "uri": "",
+                                    "uri": [""],
                                     "attributes": "u64:100,000"
                                 },
 								{
@@ -65,7 +65,7 @@
                                     "balance": "10",
                                     "creator": "sc:sft-minter",
                                     "royalties": "0",
-                                    "uri": "",
+                                    "uri": [""],
                                     "attributes": "u64:100,000"
                                 }
                             ]

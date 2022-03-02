@@ -69,7 +69,7 @@
                                     "balance": "1",
                                     "creator": "*",
                                     "royalties": "*",
-                                    "uri": "str:www.mycoolnft.com/nft1.jpg",
+                                    "uri": ["str:www.mycoolnft.com/nft1.jpg"],
                                     "attributes": "u64:100,000"
                                 }
                             ]
