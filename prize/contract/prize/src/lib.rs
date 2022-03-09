@@ -292,54 +292,6 @@ pub trait Prize:
     // DApp view API
     /////////////////////////////////////////////////////////////////////
 
-    #[view(getInfoLegacy)]
-    // Returns : (Result, optional (status, number of players, winner address, instance info)) of instance identified by iid provided  
-    fn get_instance_info_legacy(&self, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<MultiResult4<InstanceStatus, usize, ManagedAddress, InstanceInfo<Self::Api>>>> {
-        //Checks
-        require_with_opt!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
-
-        Ok_some!(MultiArg4((
-            self.get_instance_status(iid),
-            self.get_nb_players(iid),
-            self.instance_state_mapper().get(&iid).unwrap().winner_info.address,
-            self.instance_info_mapper().get(&iid).unwrap())))
-    }   
-            
-    #[view(getAllInfoLegacy)]
-    // Returns : total number of filtered instances followed by, (ID, status, number of players, winner address, instance info) of all filtered instances
-    fn get_all_instance_info_legacy(&self, #[var_args] status_filter: VarArgs<InstanceStatus>) -> MultiArg2<usize, VarArgs<MultiArg5<u32, InstanceStatus, usize, ManagedAddress, InstanceInfo<Self::Api>>>> {
-
-        let mut instances: VarArgs<MultiArg5<u32, InstanceStatus, usize, ManagedAddress, InstanceInfo<Self::Api>>> = VarArgs::new();
-        let mut status_filter_vec = status_filter.clone().into_vec();
-
-        // Ensure at least one status is provided as filter, check also overflow regarding the maximum possible values for status
-        if status_filter.len() >= 1 && status_filter.len() <= InstanceStatus::VARIANT_COUNT {
-
-            // Remove duplicates
-            status_filter_vec.sort();
-            status_filter_vec.dedup();
-
-            // Return all instances IDs which meet the status filter provided in parameter
-            for iid in self.instance_info_mapper().keys() {
-                for status in status_filter_vec.iter() {
-                    if self.get_instance_status(iid) == status.clone() {
-                        let result_vec_item = MultiArg5((
-                            iid,
-                            self.get_instance_status(iid), 
-                            self.get_nb_players(iid),
-                            self.instance_state_mapper().get(&iid).unwrap().winner_info.address,
-                            self.instance_info_mapper().get(&iid).unwrap(),
-                        ));
-                        instances.push(result_vec_item);
-                        break;
-                    }   
-                }
-            }
-        }
-
-        return MultiArg2((instances.len(), instances));
-    }
-
     #[view(getInfo)]
     fn get_instance_info(&self, iid: u32, player_address: ManagedAddress) -> MultiResult2<SCResult<()>, OptionalResult<GetInfoStruct<Self::Api>>> {
         //Checks
