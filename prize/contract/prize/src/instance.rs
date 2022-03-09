@@ -14,14 +14,6 @@ use super::event;
 ////////////////////////////////////////////////////////////////////
 // Types
 ////////////////////////////////////////////////////////////////////
-
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi, PartialEq, Clone, Copy, VariantCount, Ord, PartialOrd, Eq)]
-pub enum PrizeType {
-    EgldPrize,
-    EsdtPrize,
-    UnknownPrize,
-}
-
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi, PartialEq, Clone, Copy, VariantCount, Ord, PartialOrd, Eq)]
 pub enum InstanceStatus {
     NotExisting,
@@ -48,7 +40,6 @@ pub struct SponsorInfo<M: ManagedTypeApi> {
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct PrizeInfo<M: ManagedTypeApi> {
-    pub prize_type: PrizeType,
     pub token_identifier: TokenIdentifier<M>,
     pub token_nonce: u64,
     pub token_amount: BigUint<M>,

@@ -188,7 +188,6 @@ pub trait Prize:
                 logo_link: logo_link.clone(),
                 free_text: free_text.clone()},
             prize_info: PrizeInfo {
-                prize_type: if token_identifier.is_egld() {PrizeType::EgldPrize} else if token_identifier.is_esdt() {PrizeType::EsdtPrize} else {PrizeType::UnknownPrize},
                 token_identifier: token_identifier.clone(),
                 token_nonce: token_nonce,
                 token_amount: token_amount.clone()},
