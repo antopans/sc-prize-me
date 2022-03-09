@@ -151,6 +151,18 @@ pub trait EventModule {
         }
     }
 
+    fn event_wrapper_claim_donations(
+        &self,
+        donations_amount: &BigUint
+    ) {
+        if self.log_enable_mapper().get() == true {
+            self.claim_donations_event(
+                self.blockchain().get_block_epoch(),
+                donations_amount
+            );
+        }
+    }
+
     fn event_wrapper_manual_claim_prize(
         &self,
         iid: u32
@@ -352,6 +364,13 @@ pub trait EventModule {
         &self,
         #[indexed] epoch: u64,
         #[indexed] fee_amount: &BigUint
+    ); 
+
+    #[event("claim_donations")]
+    fn claim_donations_event(
+        &self,
+        #[indexed] epoch: u64,
+        #[indexed] donations_amount: &BigUint
     ); 
 
     #[event("manual_claim_prize")]

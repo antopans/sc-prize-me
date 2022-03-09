@@ -50,6 +50,7 @@ pub struct InstanceInfo<M: ManagedTypeApi> {
     pub sponsor_info: SponsorInfo<M>,
     pub prize_info: PrizeInfo<M>,
     pub premium: bool,
+    pub charity: bool,
     pub deadline: u64,
 }
 

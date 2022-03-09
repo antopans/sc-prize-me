@@ -12,6 +12,7 @@ mod player;
 mod security;
 mod parameter;
 mod fee;
+mod charity;
 mod event;
 mod macros;
 
@@ -33,6 +34,7 @@ pub struct GetInfoStruct<M: ManagedTypeApi> {
     pub sponsor_info: SponsorInfo<M>,
     pub prize_info: PrizeInfo<M>,
     pub premium: bool,
+    pub charity: bool,
     pub deadline: u64,
 }
 
@@ -47,6 +49,7 @@ pub trait Prize:
     +security::SecurityModule 
     +parameter::ParameterModule
     +fee::FeeModule
+    +charity::CharityModule
     +event::EventModule {
     
     /////////////////////////////////////////////////////////////////////
@@ -75,6 +78,9 @@ pub trait Prize:
         // Fees
         self.init_fees_if_empty(BigUint::from(DEFAULT_FEE_AMOUNT_EGLD), DEFAULT_SPONSOR_REWARD_PERCENT);
 
+        // Charity
+        self.init_donations_if_empty();
+
         // Event
         self.log_enable_mapper().set_if_empty(&false);
 
@@ -95,8 +101,14 @@ pub trait Prize:
             let instance_info = self.instance_info_mapper().get(&iid).unwrap();
             let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
 
-            // Send rewards to sponsor
-            self.pay_rewards_to_sponsor(iid.clone(), instance_info.sponsor_info.address.clone(), instance_state.reward_info.pool.clone());
+            if (instance_info.charity == true) {
+                // Add sponsor rewards to charity pool
+                self.charity_pool_mapper().update(|current_donations| *current_donations += instance_state.reward_info.pool.clone());
+            } 
+            else {
+                // Send rewards to sponsor
+                self.pay_rewards_to_sponsor(iid.clone(), instance_info.sponsor_info.address.clone(), instance_state.reward_info.pool.clone());
+            }            
 
             // Choose winner
             let nb_players: usize = self.get_nb_players(iid.clone());
@@ -160,7 +172,7 @@ pub trait Prize:
     /////////////////////////////////////////////////////////////////////
     #[payable("*")]
     #[endpoint(create)]
-    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url1: ManagedBuffer, url2: ManagedBuffer, url3: ManagedBuffer, reserved: ManagedBuffer, graphic: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer, premium: bool) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
+    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url1: ManagedBuffer, url2: ManagedBuffer, url3: ManagedBuffer, reserved: ManagedBuffer, graphic: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer, premium: bool, charity: bool) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
         
         let caller = self.blockchain().get_caller();
         self.nb_instances_running_mapper(caller.clone()).set_if_empty(&0u32);
@@ -192,7 +204,8 @@ pub trait Prize:
                 token_identifier: token_identifier.clone(),
                 token_nonce: token_nonce,
                 token_amount: token_amount.clone()},
-            premium: false,
+            premium: premium,
+            charity: charity,
             deadline: self.blockchain().get_block_timestamp() + duration_in_s
         };
 
@@ -358,6 +371,7 @@ pub trait Prize:
             sponsor_info: instance_info.sponsor_info,
             prize_info: instance_info.prize_info,
             premium: instance_info.premium,
+            charity: instance_info.charity,
             deadline: instance_info.deadline})
     }   
             

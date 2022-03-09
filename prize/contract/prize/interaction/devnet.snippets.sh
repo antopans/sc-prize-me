@@ -77,6 +77,14 @@ claimFees() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="claimFees" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
+getCharityPool() {
+    erdpy --verbose contract query ${ADDRESS} --function="getCharityPool" --proxy=${PROXY} 
+}
+
+claimDonations() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="claimDonations" --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
 # Param1 : manual claim enable status
 setParamManClaim() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setParamManClaim" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
@@ -150,8 +158,9 @@ createEgld() {
     LOGO_LINK="0x$(xxd -pu -c 256  <<< "https://image.shutterstock.com/z/stock-vector-elrond-egld-token-coin-symbol-with-crypto-currency-themed-background-design-modern-blue-neon-color-1912925707.jpg")"
     FREE_TEXT="0x$(xxd -pu -c 256  <<< "The Internet Scale Blockchain Is Live!")"
     PREMIUM="0"
+    CHARITY="0"
 
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} ${CHARITY} --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # CUPSHE
@@ -166,8 +175,9 @@ createEgld_2() {
     LOGO_LINK="0x$(xxd -pu -c 256  <<< "https://cdn-review.cupshe.com/cmc-admin/20210712/97e1b5540f894b96b7f84e71814e69fe13636053499957")"
     FREE_TEXT="0x$(xxd -pu -c 256  <<< "Let'have a look to the new collection !")"
     PREMIUM="0"
+    CHARITY="0"
 
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT}  ${PREMIUM} --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT}  ${PREMIUM} ${CHARITY} --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # Jeux video
@@ -182,8 +192,9 @@ createEgld_1() {
     LOGO_LINK="0x$(xxd -pu -c 256  <<< "https://image.jeuxvideo.com/medias-md/163967/1639665893-3649-card.png")"
     FREE_TEXT="0x$(xxd -pu -c 256  <<< "Play 2 earn =)")"
     PREMIUM="0"
+    CHARITY="0"
 
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} ${CHARITY} --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # McDo
@@ -197,9 +208,10 @@ createEgld_3() {
     GRAPHIC="0x$(xxd -pu -c 256  <<< "cover")"
     LOGO_LINK="0x$(xxd -pu -c 256  <<< "https://eu-images.contentstack.com/v3/assets/blt5004e64d3579c43f/blt6243759afdfd4588/61e5b45c35e87a3ac8bc4840/Logo_France_Mcdo.png")"
     FREE_TEXT="0x$(xxd -pu -c 256  <<< "Play 2 earn and come to eat =)")"
-    PREMIUM="0";
+    PREMIUM="0"
+    CHARITY="0"
 
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} ${CHARITY} --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # e-toro
@@ -213,9 +225,10 @@ createEgld_4() {
     GRAPHIC="0x$(xxd -pu -c 256  <<< "cover")"
     LOGO_LINK="0x$(xxd -pu -c 256  <<< "https://www.etoro.com/wp-content/uploads/2018/05/eToro-share-img.png")"
     FREE_TEXT="0x$(xxd -pu -c 256  <<< "Play 2 share =)")"
-    PREMIUM="0";
+    PREMIUM="0"
+    CHARITY="0"
 
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} ${CHARITY} --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # Lambo
@@ -229,9 +242,10 @@ createEgld_5() {
     GRAPHIC="0x$(xxd -pu -c 256  <<< "fill")"
     LOGO_LINK="0x$(xxd -pu -c 256  <<< "https://logo-marque.com/wp-content/uploads/2021/03/Lamborghini-Logo.png")"
     FREE_TEXT="0x$(xxd -pu -c 256  <<< "Play 2 drive beautiful car in the world =)")"
-    PREMIUM="0";
+    PREMIUM="0"
+    CHARITY="0"
 
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} ${CHARITY} --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 
@@ -246,9 +260,10 @@ createEgld_10() {
     GRAPHIC="0x$(xxd -pu -c 256  <<< "cover")"
     LOGO_LINK="0x$(xxd -pu -c 256  <<< "https://www.cupraofficial.fr/content/countries/fr/cupra-website/fr/notre-adn/garage/cupra-urbanrebel-concept-car/_jcr_content/article/richtextwithfloating/singlevideoimage.resizedViewPort.scale.assetRootXL.jpg")"
     FREE_TEXT="0x$(xxd -pu -c 256  <<< "Play 2 drive beautiful car in Spain =)")"
-    PREMIUM="0";
+    PREMIUM="0"
+    CHARITY="0"
 
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} ${CHARITY} --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 
@@ -264,9 +279,10 @@ createEgld_20() {
     GRAPHIC="0x$(xxd -pu -c 256  <<< "fill")"
     LOGO_LINK="0x$(xxd -pu -c 256  <<< "https://mlmo8pz9isqm.i.optimole.com/Y-n1_Ko-11RC-jz7/w:auto/h:auto/q:auto/https://www.laruchenumerique.com/wp-content/uploads/elementor/thumbs/ruche-numerique-capsule-house-of-code-ohpwg6f3j88lc3xwj1is5k1hroj2j96txaikh3opmk.jpg")"
     FREE_TEXT="0x$(xxd -pu -c 256  <<< "Play 2 learn")"
-    PREMIUM="0";
+    PREMIUM="0"
+    CHARITY="0"
 
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} ${CHARITY} --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # CCI 
@@ -280,9 +296,10 @@ createEgld_21() {
     GRAPHIC="0x$(xxd -pu -c 256  <<< "fill")"
     LOGO_LINK="0x$(xxd -pu -c 256  <<< "https://mlmo8pz9isqm.i.optimole.com/Y-n1_Ko-zcIbW14D/w:auto/h:auto/q:auto/https://www.laruchenumerique.com/wp-content/uploads/2019/07/ruche-numerique-logo-white.png")"
     FREE_TEXT="0x$(xxd -pu -c 256  <<< "Play 2 learn")"
-    PREMIUM="0";
+    PREMIUM="0"
+    CHARITY="0"
 
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="create" --value=${EGLD_AMOUNT} --arguments $1 ${PSEUDO} ${URL1} ${URL2} ${URL3} ${RESERVED} ${GRAPHIC} ${LOGO_LINK} ${FREE_TEXT} ${PREMIUM} ${CHARITY} --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 
@@ -306,7 +323,8 @@ createEsdt() {
     LOGO_LINK="$(xxd -pu -c 256  <<< "https://img2.storyblok.com/1440x0/smart/filters:format(webp)/f/113424/1920x1080/af849350b2/ride-token.png")"
     FREE_TEXT="$(xxd -pu -c 256  <<< "Win our new wonderful token !")"
     PREMIUM="00"
-    TX_SC_CREATE_DATA="${SC_FUNCTION::-2}@${DURATION}@${PSEUDO}@${URL1}@${URL2}@${URL3}@${RESERVED}@${GRAPHIC}@${LOGO_LINK}@${FREE_TEXT}@${PREMIUM}"
+    CHARITY="00"
+    TX_SC_CREATE_DATA="${SC_FUNCTION::-2}@${DURATION}@${PSEUDO}@${URL1}@${URL2}@${URL3}@${RESERVED}@${GRAPHIC}@${LOGO_LINK}@${FREE_TEXT}@${PREMIUM}@${CHARITY}"
     
     TOKEN_ID="$(xxd -pu -c 256  <<< $3)"
     TOKEN_AMOUNT=`printf "%02X" $4`; if [ $(expr ${#TOKEN_AMOUNT} % 2) != "0" ]; then TOKEN_AMOUNT="0${TOKEN_AMOUNT}"; fi
@@ -338,7 +356,8 @@ createNft() {
     LOGO_LINK="$(xxd -pu -c 256  <<< "https://media.heartlandtv.com/images/HARVEST+MOON+SD.jpg")"
     FREE_TEXT="$(xxd -pu -c 256  <<< "Buy & sell NFTs !!!")"
     PREMIUM="00"
-    TX_SC_CREATE_DATA="${SC_FUNCTION::-2}@${DURATION}@${PSEUDO}@${URL1}@${URL2}@${URL3}@${RESERVED}@${GRAPHIC}@${LOGO_LINK}@${FREE_TEXT}@${PREMIUM}"
+    CHARITY="00"
+    TX_SC_CREATE_DATA="${SC_FUNCTION::-2}@${DURATION}@${PSEUDO}@${URL1}@${URL2}@${URL3}@${RESERVED}@${GRAPHIC}@${LOGO_LINK}@${FREE_TEXT}@${PREMIUM}@${CHARITY}"
     
     TOKEN_ID="$(xxd -pu -c 256  <<< $3)"
     TOKEN_NONCE=`printf "%02X" $4`

@@ -118,7 +118,7 @@ pub trait FeeModule:
     #[storage_mapper("fee_policy")]
     fn fee_policy_mapper(&self) -> SingleValueMapper<FeePolicy<Self::Api>>;
 
-    // Fee  pool for SC owner
+    // Fee pool for SC owner
     #[storage_mapper("fee_pool")]
     fn fee_pool_mapper(&self) -> SingleValueMapper<BigUint>;
 }
