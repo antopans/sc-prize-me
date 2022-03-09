@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Wallets 
-source ./interaction/devnet.wallets.sh
+source ./interaction/test_wallets.sh
 
 #Create 1 instance (duration: 5 hours)
 source ./interaction/devnet.snippets.sh; createEgld_1 18000 $SPONSOR1
