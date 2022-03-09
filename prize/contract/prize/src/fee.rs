@@ -64,10 +64,10 @@ pub trait FeeModule:
     // Queries
     /////////////////////////////////////////////////////////////////////
     #[view(getFeePol)]
-    fn get_fee_policy(&self) -> MultiResult2<BigUint, u8> {        
+    fn get_fee_policy(&self) -> MultiValue2<BigUint, u8> {        
         let current_fee_policy: FeePolicy<Self::Api> = self.fee_policy_mapper().get();
 
-        return MultiArg2((current_fee_policy.fee_amount_egld, current_fee_policy.sponsor_reward_percent)); 
+        return MultiValue2((current_fee_policy.fee_amount_egld, current_fee_policy.sponsor_reward_percent)); 
     }
     
     #[view(getFeePool)]

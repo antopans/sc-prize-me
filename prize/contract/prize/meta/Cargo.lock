@@ -90,9 +90,9 @@ dependencies = [
 
 [[package]]
 name = "elrond-codec"
-version = "0.8.3"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62c791ac0f5f720ff7b7b8ea4f15aa13c17cdb41c1c8831defa067851d6ecb9b"
+checksum = "d6d85f2b7c969a12da26157a989f759f59d1df2b0e2f4ae7b2ebb011334a63c1"
 dependencies = [
  "arrayvec",
  "elrond-codec-derive",
@@ -101,9 +101,9 @@ dependencies = [
 
 [[package]]
 name = "elrond-codec-derive"
-version = "0.8.3"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c8c461ea8e51e1facee8c3f8c84a9339f4307b29a9fad9109ca98e45fcb07b8"
+checksum = "ae84b062b57562daf6b90d12c6568a6df21ef355625f6dd21a3106d774456a51"
 dependencies = [
  "hex",
  "proc-macro2",
@@ -113,9 +113,9 @@ dependencies = [
 
 [[package]]
 name = "elrond-wasm"
-version = "0.26.0"
+version = "0.29.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "598913c5925dc4ba337da4e5dbf43c9462b5da391c07b1136a9fa53cdc398d7e"
+checksum = "f6f18ea70041cfea059cdff5aaff8e0d9a0859821e3f2ac7d56a34d0193584f3"
 dependencies = [
  "bitflags",
  "elrond-codec",
@@ -127,9 +127,9 @@ dependencies = [
 
 [[package]]
 name = "elrond-wasm-debug"
-version = "0.26.0"
+version = "0.29.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f0213b944a241a1b29839abdb0e0781fbf28788bc58e54023e9241c87eecb5d"
+checksum = "8c587c69cc88fd9eadf936df6ecab0c915b95dc71f07a8bec729e1d085da5914"
 dependencies = [
  "cargo_toml",
  "elrond-wasm",
@@ -151,9 +151,9 @@ dependencies = [
 
 [[package]]
 name = "elrond-wasm-derive"
-version = "0.26.0"
+version = "0.29.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4251c0c8d153f0997d37901fcd20b90ca41a3f34ffb0a8887ce37c5f2f2f09ea"
+checksum = "8ec6ec0ec7a18bdc3d63126cb5e0c5fa9d3874dd915b7e030de16ee1cf5cc2b7"
 dependencies = [
  "hex",
  "proc-macro2",
@@ -230,9 +230,9 @@ checksum = "eef78b64d87775463c549fbd80e19249ef436ea3bf1de2a1eb7e717ec7fab1e9"
 
 [[package]]
 name = "mandos"
-version = "0.11.1"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27bf7cd11f1278190deb39ac404d3eb217e972ab89ebb3558a902f7c7de8bdca"
+checksum = "d900ececaf3c154e5458df685766c711ad7cb97d4c49648c2ad3c7386d14aa2f"
 dependencies = [
  "hex",
  "num-bigint",

@@ -62,8 +62,8 @@ pub trait ParameterModule:
     }
 
     #[view(getParamDuration)]
-    fn get_param_duration(&self) -> MultiResult2<u64, u64> {   
-        return MultiArg2((self.param_duration_min_mapper().get(), self.param_duration_max_mapper().get()));     
+    fn get_param_duration(&self) -> MultiValue2<u64, u64> {   
+        return MultiValue2((self.param_duration_min_mapper().get(), self.param_duration_max_mapper().get()));     
     }
 
     /////////////////////////////////////////////////////////////////////

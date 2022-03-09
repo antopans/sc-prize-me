@@ -465,7 +465,7 @@ getSponsorIDs() {
 # Param1 : Player pem wallet
 getPlayerIDs() {
     BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $1`    
-    PLAYER_HEX_ADDRESS=`${SCRIPT_PATH}/${BECH32_UTIL}$BECH32_PEM_WALLET`
+    PLAYER_HEX_ADDRESS=`${SCRIPT_PATH}/${BECH32_UTIL} $BECH32_PEM_WALLET`
 
     erdpy --verbose contract query ${ADDRESS} --function="getPlayerIDs" --arguments "0x${PLAYER_HEX_ADDRESS}" --proxy=${PROXY} 
 }

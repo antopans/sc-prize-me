@@ -2,7 +2,7 @@
 macro_rules! require_with_opt {
     ($expression:expr, $error_msg:expr) => {
         if (!($expression)) {
-            return MultiArg2((sc_error!($error_msg), OptionalArg::None))
+            return MultiValue2((sc_error!($error_msg), OptionalValue::None))
         }
     };
 }
@@ -10,6 +10,6 @@ macro_rules! require_with_opt {
 #[macro_export]
 macro_rules! Ok_some {
     ($some:expr) => {
-        return MultiArg2((Ok(()), OptionalArg::Some($some)))
+        return MultiValue2((Ok(()), OptionalValue::Some($some)))
     };
 }

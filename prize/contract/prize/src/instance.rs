@@ -14,7 +14,7 @@ use super::event;
 ////////////////////////////////////////////////////////////////////
 // Types
 ////////////////////////////////////////////////////////////////////
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi, PartialEq, Clone, Copy, VariantCount, Ord, PartialOrd, Eq)]
+#[derive(ManagedVecItem, NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi, PartialEq, Clone, Copy, VariantCount, Ord, PartialOrd, Eq)]
 pub enum InstanceStatus {
     NotExisting,
     Running,
@@ -25,7 +25,7 @@ pub enum InstanceStatus {
 }
 
 // Information filled at instance creation
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
+#[derive(ManagedVecItem, NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct SponsorInfo<M: ManagedTypeApi> {
     pub address: ManagedAddress<M>,
     pub pseudo: ManagedBuffer<M>,
@@ -38,14 +38,14 @@ pub struct SponsorInfo<M: ManagedTypeApi> {
     pub free_text: ManagedBuffer<M>,
 }
 
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
+#[derive(ManagedVecItem, NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct PrizeInfo<M: ManagedTypeApi> {
     pub token_identifier: TokenIdentifier<M>,
     pub token_nonce: u64,
     pub token_amount: BigUint<M>,
 }
 
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
+#[derive(ManagedVecItem, NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct InstanceInfo<M: ManagedTypeApi> {
     pub sponsor_info: SponsorInfo<M>,
     pub prize_info: PrizeInfo<M>,
@@ -55,26 +55,25 @@ pub struct InstanceInfo<M: ManagedTypeApi> {
 }
 
 // State of instance, content depends on instance lifecycle
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
+#[derive(ManagedVecItem, NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct RewardInfo<M: ManagedTypeApi> {
     pub percent: u8,
     pub pool: BigUint<M>,
 }
 
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
+#[derive(ManagedVecItem, NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct WinnerInfo<M: ManagedTypeApi> {
     pub ticket_number: usize,
     pub address: ManagedAddress<M>,
 }
 
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
+#[derive(ManagedVecItem, NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
 pub struct InstanceState<M: ManagedTypeApi> {
     pub claimed_status: bool,
     pub reward_info: RewardInfo<M>,
     pub winner_info: WinnerInfo<M>,
     pub disabled: bool,
 }
-
 
 ////////////////////////////////////////////////////////////////////
 // Functions
@@ -139,7 +138,7 @@ pub trait InstanceModule:
 
     #[view(hasStatus)]
     fn is_instance_with_status(&self, instance_status: InstanceStatus) -> bool {
-        let instances: VarArgs<u32> = self.get_instance_ids(MultiArgVec(Vec::from([instance_status])));
+        let instances: MultiValueManagedVec<u32> = self.get_instance_ids(MultiValueManagedVec::from_single_item(instance_status));
         return instances.len() != 0;
     }
 
@@ -149,7 +148,7 @@ pub trait InstanceModule:
     }
 
     #[view(getRemainingTime)]
-    fn get_remaining_time(&self, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<u64>> {
+    fn get_remaining_time(&self, iid: u32) -> MultiValue2<SCResult<()>, OptionalValue<u64>> {
         require_with_opt!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
 
         // Compute remaining time
@@ -165,21 +164,21 @@ pub trait InstanceModule:
     }
 
     #[view(getIDs)]
-    fn get_instance_ids(&self, #[var_args] status_filter: VarArgs<InstanceStatus>) -> VarArgs<u32> {
+    fn get_instance_ids(&self, #[var_args] status_filter: MultiValueManagedVec<InstanceStatus>) -> MultiValueManagedVec<u32> {
 
-        let mut instance_ids = VarArgs::new();
-        let mut status_filter_vec = status_filter.clone().into_vec();
+        let mut instance_ids = MultiValueManagedVec::new();
+        // let mut status_filter_vec = status_filter.clone().into_vec().into_vec();
 
         // Ensure at least one status is provided as filter, check also overflow regarding the maximum possible values for status
         if status_filter.len() >= 1 && status_filter.len() <= InstanceStatus::VARIANT_COUNT {
 
             // Remove duplicates
-            status_filter_vec.sort();
-            status_filter_vec.dedup();
+            // status_filter_vec.sort();
+            // status_filter_vec.dedup();
 
             // Return all instances IDs which meet the status filter provided in parameter
             for iid in self.instance_info_mapper().keys() {
-                for status in status_filter_vec.iter() {
+                for status in status_filter.iter() {
                     if self.get_instance_status(iid) == status.clone() {
                         instance_ids.push(iid.clone());
                         break;
@@ -192,7 +191,7 @@ pub trait InstanceModule:
     }
 
     #[view(hasWon)]
-    fn has_won(&self, iid: u32, player_address: ManagedAddress) -> MultiResult2<SCResult<()>, OptionalResult<bool>> {
+    fn has_won(&self, iid: u32, player_address: ManagedAddress) -> MultiValue2<SCResult<()>, OptionalValue<bool>> {
         // Checks
         require_with_opt!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
 

@@ -1,4 +1,5 @@
 #![no_std]
+#![feature(generic_associated_types)]
 
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
@@ -23,7 +24,7 @@ use instance::*;
 ////////////////////////////////////////////////////////////////////
 
 // data format for endpoint return
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi)]
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, TypeAbi, ManagedVecItem)]
 pub struct GetInfoStruct<M: ManagedTypeApi> {
     pub iid: u32,
     pub instance_status: InstanceStatus,
@@ -94,14 +95,14 @@ pub trait Prize:
     #[only_owner]
     #[endpoint(distributePrizes)]
     fn distributed_prizes(&self) -> SCResult<()> {
-        let ended_instances: VarArgs<u32> = self.get_instance_ids(MultiArgVec(Vec::from([InstanceStatus::Ended])));
+        let ended_instances: MultiValueManagedVec<u32> = self.get_instance_ids(MultiValueManagedVec::from_single_item(InstanceStatus::Ended));
 
         for iid in ended_instances.iter() {
             // Get instance info & state
             let instance_info = self.instance_info_mapper().get(&iid).unwrap();
             let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
 
-            if (instance_info.charity == true) {
+            if instance_info.charity == true {
                 // Add sponsor rewards to charity pool
                 self.charity_pool_mapper().update(|current_donations| *current_donations += instance_state.reward_info.pool.clone());
             } 
@@ -153,7 +154,7 @@ pub trait Prize:
     #[only_owner]
     #[endpoint(cleanClaimed)]
     fn clean_claimed_instances(&self) -> SCResult<()> {        
-        let claimed_instances: VarArgs<u32> = self.get_instance_ids(MultiArgVec(Vec::from([InstanceStatus::Claimed])));
+        let claimed_instances: MultiValueManagedVec<u32> = self.get_instance_ids(MultiValueManagedVec::from_single_item(InstanceStatus::Claimed));
 
         for iid in claimed_instances.iter() {
             self.clear_players(iid.clone());
@@ -172,7 +173,7 @@ pub trait Prize:
     /////////////////////////////////////////////////////////////////////
     #[payable("*")]
     #[endpoint(create)]
-    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url1: ManagedBuffer, url2: ManagedBuffer, url3: ManagedBuffer, reserved: ManagedBuffer, graphic: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer, premium: bool, charity: bool) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
+    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url1: ManagedBuffer, url2: ManagedBuffer, url3: ManagedBuffer, reserved: ManagedBuffer, graphic: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer, premium: bool, charity: bool) -> MultiValue2<SCResult<()>, OptionalValue<u32>> {
         
         let caller = self.blockchain().get_caller();
         self.nb_instances_running_mapper(caller.clone()).set_if_empty(&0u32);
@@ -240,7 +241,7 @@ pub trait Prize:
     #[payable("EGLD")]
     #[endpoint(play)]
     // Returns : Result, optional (ticket number)  
-    fn play(&self, #[payment] fees: BigUint, iid: u32) -> MultiResult2<SCResult<()>, OptionalResult<usize>> {
+    fn play(&self, #[payment] fees: BigUint, iid: u32) -> MultiValue2<SCResult<()>, OptionalValue<usize>> {
 
         // Checks
         let caller = self.blockchain().get_caller();
@@ -293,7 +294,7 @@ pub trait Prize:
     /////////////////////////////////////////////////////////////////////
 
     #[view(getInfo)]
-    fn get_instance_info(&self, iid: u32, player_address: ManagedAddress) -> MultiResult2<SCResult<()>, OptionalResult<GetInfoStruct<Self::Api>>> {
+    fn get_instance_info(&self, iid: u32, player_address: ManagedAddress) -> MultiValue2<SCResult<()>, OptionalValue<GetInfoStruct<Self::Api>>> {
         //Checks
         require_with_opt!(self.get_instance_status(iid) != InstanceStatus::NotExisting, "Instance does not exist");
 
@@ -309,7 +310,7 @@ pub trait Prize:
 
         if player_address.clone().is_zero() == false {
             has_played = self.has_played(iid, player_address.clone());
-            has_won = if (player_address == winner_info.address) {true} else {false};
+            has_won = if player_address == winner_info.address {true} else {false};
         }
 
         // Return filled structure
@@ -329,21 +330,21 @@ pub trait Prize:
             
     #[view(getAllInfo)]
     // Returns : total number of filtered instances followed by information of all filtered instances
-    fn get_all_instance_info(&self, player_address: ManagedAddress, #[var_args] status_filter: VarArgs<InstanceStatus>) -> MultiArg2<usize, VarArgs<GetInfoStruct<Self::Api>>> {
+    fn get_all_instance_info(&self, player_address: ManagedAddress, #[var_args] status_filter: MultiValueManagedVec<InstanceStatus>) -> MultiValue2<usize, MultiValueManagedVec<GetInfoStruct<Self::Api>>> {
 
-        let mut instances: VarArgs<GetInfoStruct<Self::Api>> = VarArgs::new();
-        let mut status_filter_vec = status_filter.clone().into_vec();
+        let mut instances: MultiValueManagedVec<GetInfoStruct<Self::Api>> = MultiValueManagedVec::new();
+        // let mut status_filter_vec = status_filter.clone().into_vec().into_vec();
 
         // Ensure at least one status is provided as filter, check also overflow regarding the maximum possible values for status
         if status_filter.len() >= 1 && status_filter.len() <= InstanceStatus::VARIANT_COUNT {
 
             // Remove duplicates
-            status_filter_vec.sort();
-            status_filter_vec.dedup();
+            // status_filter_vec.sort();
+            // status_filter_vec.dedup();
 
             // Return all instances IDs which meet the status filter provided in parameter
             for iid in self.instance_info_mapper().keys() {
-                for status in status_filter_vec.iter() {
+                for status in status_filter.iter() {
                     if self.get_instance_status(iid) == status.clone() {
                         instances.push(self.get_instance_info(iid, player_address.clone()).0.1.into_option().unwrap());
                         break;
@@ -352,7 +353,7 @@ pub trait Prize:
             }
         }
 
-        return MultiArg2((instances.len(), instances));
+        return MultiValue2((instances.len(), instances));
     }
 
     /////////////////////////////////////////////////////////////////////

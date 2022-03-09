@@ -72,9 +72,9 @@ pub trait SecurityModule:
     // Queries
     /////////////////////////////////////////////////////////////////////  
     #[view(getAddrBlacklist)]
-    fn get_address_blacklist(&self) ->  VarArgs<ManagedAddress>  {
+    fn get_address_blacklist(&self) ->  MultiValueManagedVec<ManagedAddress>  {
                
-        let mut address_blacklist: VarArgs<ManagedAddress> = VarArgs::new();
+        let mut address_blacklist: MultiValueManagedVec<ManagedAddress> = MultiValueManagedVec::new();
 
         for addr in self.address_blacklist_set_mapper().iter() {
             address_blacklist.push(addr);

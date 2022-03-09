@@ -19,8 +19,8 @@ pub trait PlayerModule:
     // Queries
     /////////////////////////////////////////////////////////////////////
     #[view(getPlayerIDs)]
-    fn get_player_instances(&self, player_address: ManagedAddress) -> VarArgs<u32> {
-        let mut player_iids = VarArgs::new();
+    fn get_player_instances(&self, player_address: ManagedAddress) -> MultiValueManagedVec<u32> {
+        let mut player_iids = MultiValueManagedVec::new();
 
         // Return all instances IDs to which player address provided in parameter has played
         for iid in self.instance_info_mapper().keys() {

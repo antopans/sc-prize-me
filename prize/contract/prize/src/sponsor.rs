@@ -21,8 +21,8 @@ pub trait SponsorModule:
     // Queries
     /////////////////////////////////////////////////////////////////////
     #[view(getSponsorIDs)]
-    fn get_sponsor_instances(&self, sponsor_address: ManagedAddress) -> VarArgs<u32> {
-        let mut sponsor_iids = VarArgs::new();
+    fn get_sponsor_instances(&self, sponsor_address: ManagedAddress) -> MultiValueManagedVec<u32> {
+        let mut sponsor_iids = MultiValueManagedVec::new();
 
         // Return all instances IDs with sponsor address matching the one provided in parameter
         for (iid, instance_info) in self.instance_info_mapper().iter() {
