@@ -160,7 +160,7 @@ pub trait Prize:
     /////////////////////////////////////////////////////////////////////
     #[payable("*")]
     #[endpoint(create)]
-    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url1: ManagedBuffer, url2: ManagedBuffer, url3: ManagedBuffer, url4: ManagedBuffer, url5: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
+    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url1: ManagedBuffer, url2: ManagedBuffer, url3: ManagedBuffer, reserved: ManagedBuffer, graphic: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
         
         let caller = self.blockchain().get_caller();
         self.nb_instances_running_mapper(caller.clone()).set_if_empty(&0u32);
@@ -183,8 +183,8 @@ pub trait Prize:
                 url1: url1.clone(),
                 url2: url2.clone(),
                 url3: url3.clone(),
-                url4: url4.clone(),
-                url5: url5.clone(),
+                reserved: reserved.clone(),
+                graphic: graphic.clone(),
                 logo_link: logo_link.clone(),
                 free_text: free_text.clone()},
             prize_info: PrizeInfo {

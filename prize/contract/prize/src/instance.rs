@@ -32,8 +32,8 @@ pub struct SponsorInfo<M: ManagedTypeApi> {
     pub url1: ManagedBuffer<M>,
     pub url2: ManagedBuffer<M>,
     pub url3: ManagedBuffer<M>,
-    pub url4: ManagedBuffer<M>,
-    pub url5: ManagedBuffer<M>,
+    pub reserved: ManagedBuffer<M>,
+    pub graphic: ManagedBuffer<M>,
     pub logo_link: ManagedBuffer<M>,
     pub free_text: ManagedBuffer<M>,
 }
