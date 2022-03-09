@@ -20,7 +20,8 @@
 					"str:",
 					"str:",
 					"str:https://website-sponsorEGLD.com/logo.svg",
-					"str:Welcome to my EGLD prize. Good luck !"
+					"str:Welcome to my EGLD prize. Good luck !",
+					"false"
 				],
 				"gasLimit": "5,000,000,000",
 				"gasPrice": "0"
@@ -58,7 +59,9 @@
 					"str:",
 					"str:",
 					"str:https://website-sponsorESDT.com/logo.svg",
-					"str:Welcome to my ESDT prize. Good luck !"
+					"str:Welcome to my ESDT prize. Good luck !",
+					"false"
+
 				],
 				"gasLimit": "5,000,000,000",
 				"gasPrice": "0"
@@ -97,7 +100,8 @@
 					"str:",
 					"str:",
 					"str:https://website-sponsorNFT.com/logo.svg",
-					"str:Welcome to my NFT prize. Good luck !"
+					"str:Welcome to my NFT prize. Good luck !",
+					"false"
 				],
 				"gasLimit": "5,000,000,000",
 				"gasPrice": "0"
@@ -136,7 +140,8 @@
 					"str:",
 					"str:",
 					"str:https://website-sponsorSFT.com/logo.svg",
-					"str:Welcome to my SFT prize. Good luck !"
+					"str:Welcome to my SFT prize. Good luck !",
+					"false"
 				],
 				"gasLimit": "5,000,000,000",
 				"gasPrice": "0"

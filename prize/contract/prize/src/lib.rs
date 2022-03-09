@@ -86,8 +86,8 @@ pub trait Prize:
     /////////////////////////////////////////////////////////////////////
 
     #[only_owner]
-    #[endpoint(triggerEnded)]
-    fn trigger_ended_instances(&self) -> SCResult<()> {
+    #[endpoint(distributePrizes)]
+    fn distributed_prizes(&self) -> SCResult<()> {
         let ended_instances: VarArgs<u32> = self.get_instance_ids(MultiArgVec(Vec::from([InstanceStatus::Ended])));
 
         for iid in ended_instances.iter() {
@@ -160,7 +160,7 @@ pub trait Prize:
     /////////////////////////////////////////////////////////////////////
     #[payable("*")]
     #[endpoint(create)]
-    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url1: ManagedBuffer, url2: ManagedBuffer, url3: ManagedBuffer, reserved: ManagedBuffer, graphic: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
+    fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url1: ManagedBuffer, url2: ManagedBuffer, url3: ManagedBuffer, reserved: ManagedBuffer, graphic: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer, premium: bool) -> MultiResult2<SCResult<()>, OptionalResult<u32>> {
         
         let caller = self.blockchain().get_caller();
         self.nb_instances_running_mapper(caller.clone()).set_if_empty(&0u32);
@@ -171,6 +171,7 @@ pub trait Prize:
         require_with_opt!(duration_in_s >= self.param_duration_min_mapper().get(), "Duration out of allowed range");
         require_with_opt!(duration_in_s <= self.param_duration_max_mapper().get(), "Duration out of allowed range");
         require_with_opt!(token_amount > 0, "Prize cannot be null");
+        require_with_opt!(premium == false, "Premium is not allowed");
 
         // Compute next iid
         let new_iid = self.iid_counter_mapper().get() + 1;

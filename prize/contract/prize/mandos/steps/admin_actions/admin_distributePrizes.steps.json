@@ -1,15 +1,15 @@
 {
-	"name": "triggerEnded endpoint",
+	"name": "distributePrizes endpoint",
 	"steps": [
 		{
 			"step": "scCall",
-			"txId": "triggerEnded",
-			"comment": "admin calls triggerEnded endpoint",
+			"txId": "distributePrizes",
+			"comment": "admin calls distributePrizes endpoint",
 			"tx": {
 				"from": "address:owner",
 				"to": "sc:prize",
 				"egldValue": "0",
-				"function": "triggerEnded",
+				"function": "distributePrizes",
 				"arguments": [
 				],
 				"gasLimit": "5,000,000,000",

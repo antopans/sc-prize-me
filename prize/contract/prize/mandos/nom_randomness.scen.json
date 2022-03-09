@@ -42,7 +42,7 @@
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/admin_actions/admin_triggerEnded.steps.json"
+			"path": "steps/admin_actions/admin_distributePrizes.steps.json"
 		},
 		{
 			"step": "externalSteps",
@@ -86,7 +86,7 @@
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/admin_actions/admin_triggerEnded.steps.json"
+			"path": "steps/admin_actions/admin_distributePrizes.steps.json"
 		},
 		{
 			"step": "externalSteps",
@@ -132,7 +132,7 @@
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/admin_actions/admin_triggerEnded.steps.json"
+			"path": "steps/admin_actions/admin_distributePrizes.steps.json"
 		},
 		{
 			"step": "externalSteps",
@@ -177,7 +177,7 @@
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/admin_actions/admin_triggerEnded.steps.json"
+			"path": "steps/admin_actions/admin_distributePrizes.steps.json"
 		},
 		{
 			"step": "externalSteps",

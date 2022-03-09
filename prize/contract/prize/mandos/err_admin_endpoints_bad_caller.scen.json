@@ -8,7 +8,7 @@
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/admin_actions/admin_triggerEnded_bad_caller.steps.json"
+			"path": "steps/admin_actions/admin_distributePrizes_bad_caller.steps.json"
 		},
 		{
 			"step": "externalSteps",

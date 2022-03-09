@@ -12,7 +12,7 @@
 ***************
 * Endpoints & Views
 ***************
-    #[endpoint(triggerEnded)]
+    #[endpoint(distributePrizes)]
         ERR "Caller address not allowed"
         NOM case with 0, 1, 2, 3, 4
 
