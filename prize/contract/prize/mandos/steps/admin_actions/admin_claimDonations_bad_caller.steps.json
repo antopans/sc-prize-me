@@ -1,0 +1,28 @@
+{
+	"name": "claimDonations endpoint bad caller",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "claimDonations",
+			"comment": "non admin tries to call claimDonations endpoint",
+			"tx": {
+				"from": "address:sponsorEGLD",
+				"to": "sc:prize",
+				"egldValue": "0",
+				"function": "claimDonations",
+				"arguments": [
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "4",
+				"message":"str:Endpoint can only be called by owner",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}
