@@ -377,7 +377,7 @@ createNft() {
 # Param2 : pem wallet
 # Param3 : fees : #1000000000000000 => 0.001 EGLD
 play() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=50000000 --function="play" --value=$3 --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=10000000 --function="play" --value=$3 --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # Param1 : Instance ID
