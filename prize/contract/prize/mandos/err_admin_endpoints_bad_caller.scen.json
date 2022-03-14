@@ -48,6 +48,10 @@
 		},
 		{
 			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_set_param_sponsor_info_max_length_bad_caller.steps.json"
+		},
+		{
+			"step": "externalSteps",
 			"path": "steps/admin_actions/admin_add_addr_blacklist_bad_caller.steps.json"
 		},
 		{

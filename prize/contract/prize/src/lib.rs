@@ -63,7 +63,8 @@ pub trait Prize:
         const DEFAULT_MAX_DURATION: u64 = 60*60*24*365; // 1 year
         const DEFAULT_MAX_NB_INSTANCES_PER_SPONSOR: u32 = 20;
         const DEFAULT_FEE_AMOUNT_EGLD: u32 = 0;
-        const DEFAULT_SPONSOR_REWARD_PERCENT: u8 = 0u8;
+        const DEFAULT_SPONSOR_REWARD_PERCENT: u8 = 0;
+        const DEFAULT_MAX_SPONSOR_INFO_LENGTH: u32 = 1000;
         
         // Initializations @ deployment only 
 
@@ -75,6 +76,7 @@ pub trait Prize:
         self.param_nb_max_instances_per_sponsor_mapper().set_if_empty(&DEFAULT_MAX_NB_INSTANCES_PER_SPONSOR);
         self.param_duration_min_mapper().set_if_empty(&DEFAULT_MIN_DURATION);              
         self.param_duration_max_mapper().set_if_empty(&DEFAULT_MAX_DURATION); 
+        self.param_sponsor_info_max_length_mapper().set_if_empty(&DEFAULT_MAX_SPONSOR_INFO_LENGTH);
 
         // Fees
         self.init_fees_if_empty(BigUint::from(DEFAULT_FEE_AMOUNT_EGLD), DEFAULT_SPONSOR_REWARD_PERCENT);
@@ -176,6 +178,8 @@ pub trait Prize:
     fn create_instance(&self, #[payment_token] token_identifier: TokenIdentifier, #[payment_nonce] token_nonce: u64, #[payment_amount] token_amount: BigUint, duration_in_s: u64, pseudo: ManagedBuffer, url1: ManagedBuffer, url2: ManagedBuffer, url3: ManagedBuffer, reserved: ManagedBuffer, graphic: ManagedBuffer, logo_link: ManagedBuffer, free_text: ManagedBuffer, premium: bool, charity: bool) -> MultiValue2<SCResult<()>, OptionalValue<u32>> {
         
         let caller = self.blockchain().get_caller();
+        let sponsor_info_length = (pseudo.len() + url1.len() + url2.len() + url3.len() + reserved.len() + graphic.len() + logo_link.len() + free_text.len()) as u32;
+        
         self.nb_instances_running_mapper(caller.clone()).set_if_empty(&0u32);
         
         // Check validity of parameters
@@ -185,6 +189,7 @@ pub trait Prize:
         require_with_opt!(duration_in_s <= self.param_duration_max_mapper().get(), "Duration out of allowed range");
         require_with_opt!(token_amount > 0, "Prize cannot be null");
         require_with_opt!(premium == false, "Premium is not allowed");
+        require_with_opt!(sponsor_info_length <= self.param_sponsor_info_max_length_mapper().get(), "Sponsor info length out of range");
 
         // Compute next iid
         let new_iid = self.iid_counter_mapper().get() + 1;

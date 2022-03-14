@@ -48,6 +48,17 @@ pub trait ParameterModule:
         Ok(())
     }
 
+    #[only_owner]
+    #[endpoint(setParamSponsorInfoMaxLength)]
+    fn set_param_sponsor_info_max_length(&self, length_max: u32) -> SCResult<()> {
+        self.param_sponsor_info_max_length_mapper().update(|current_value| *current_value = length_max);
+
+        // Log event
+        self.event_wrapper_set_param_sponsor_info_max_length(length_max);
+
+        Ok(())
+    }
+
     /////////////////////////////////////////////////////////////////////
     // Queries
     /////////////////////////////////////////////////////////////////////
@@ -80,4 +91,7 @@ pub trait ParameterModule:
 
     #[storage_mapper("param_duration_max")]
     fn param_duration_max_mapper(&self) -> SingleValueMapper<u64>;
+
+    #[storage_mapper("param_sponsor_info_max_length")]
+    fn param_sponsor_info_max_length_mapper(&self) -> SingleValueMapper<u32>;
 }

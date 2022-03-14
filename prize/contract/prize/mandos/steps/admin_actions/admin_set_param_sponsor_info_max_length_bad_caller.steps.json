@@ -1,0 +1,30 @@
+{
+	"name": "setParamSponsorInfoMaxLength endpoint bad caller",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "setParamSponsorInfoMaxLength",
+			"comment": "non admin tries to call setParamSponsorInfoMaxLength endpoint",
+			"tx": {
+				"from": "address:sponsorEGLD",
+				"to": "sc:prize",
+				"egldValue": "0",
+				"function": "setParamSponsorInfoMaxLength",
+				"arguments": [
+					"10"
+
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "4",
+				"message":"str:Endpoint can only be called by owner",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}

@@ -244,6 +244,18 @@ pub trait EventModule {
         }
     }
 
+    fn event_wrapper_set_param_sponsor_info_max_length(
+        &self,
+        length_max: u32
+    ) {
+        if self.log_enable_mapper().get() == true {
+            self.set_param_sponsor_info_max_length_event(
+                self.blockchain().get_block_epoch(),
+                length_max
+            );
+        }
+    }
+
     fn event_wrapper_set_param_nb_max_instances_per_sponsor(
         &self,
         nb_instances_max: u32
@@ -418,6 +430,13 @@ pub trait EventModule {
         #[indexed] epoch: u64,
         #[indexed] duration_min: u64,
         #[indexed] duration_max: u64
+    ); 
+
+    #[event("set_param_sponsor_info_max_length")]
+    fn set_param_sponsor_info_max_length_event(
+        &self,
+        #[indexed] epoch: u64,
+        #[indexed] length_max: u32
     ); 
 
     #[event("set_param_nb_max_instances_per_sponsor")]
