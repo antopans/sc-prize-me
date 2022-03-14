@@ -356,6 +356,49 @@ pub trait Prize:
         return MultiValue2((instances.len(), instances));
     }
 
+    #[view(getAllInfoFrag)]
+    // Returns : 
+    //  - number of filtered instances returned, followed by 
+    //  - boolean indicating if the last filtered iid is part of the return instances, followed by
+    //  - information of up to <max_nb_instances_returned> filtered instances from <iid_start> 
+    fn get_all_instance_info_frag(&self, player_address: ManagedAddress, iid_start: u32, max_nb_instances_returned: u32, #[var_args] status_filter: MultiValueManagedVec<InstanceStatus>) -> MultiValue3<u32, bool, MultiValueManagedVec<GetInfoStruct<Self::Api>>> {
+
+        let mut instances: MultiValueManagedVec<GetInfoStruct<Self::Api>> = MultiValueManagedVec::new();
+        let mut instance_counter: u32 = 0;
+        let mut current_filtered_iid: u32 = iid_start;
+        let mut last_filtered_iid_returned: u32 = iid_start;
+        
+
+        // Ensure at least one status is provided as filter, check also overflow regarding the maximum possible values for status
+        if status_filter.len() >= 1 && status_filter.len() <= InstanceStatus::VARIANT_COUNT {
+
+            // Return all instances IDs which meet the status filter provided in parameter
+            for iid in self.instance_info_mapper().keys() {
+                if iid >= iid_start {
+                    for status in status_filter.iter() {
+                        if self.get_instance_status(iid) == status.clone() {
+                            
+                            // Track the current filtered iid
+                            current_filtered_iid = iid;
+
+                            if instance_counter < max_nb_instances_returned {
+                                instances.push(self.get_instance_info(iid, player_address.clone()).0.1.into_option().unwrap());
+                                instance_counter += 1;
+
+                                // Record the last 
+                                last_filtered_iid_returned = iid;
+                                
+                                break;
+                            }
+                        }   
+                    }
+                }
+            }
+        }
+
+        return MultiValue3((instance_counter, (instance_counter > 0) && (current_filtered_iid == last_filtered_iid_returned), instances));
+    }
+
     /////////////////////////////////////////////////////////////////////
     // Internal SC functions
     /////////////////////////////////////////////////////////////////////

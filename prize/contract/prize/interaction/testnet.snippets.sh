@@ -390,8 +390,14 @@ claimPrize() {
 # DApp view API
 ######################################################################
 
+# Var params : optional instance status filter (from 1 to 5 status can be provided).
  getNb() {
-    erdpy --verbose contract query ${ADDRESS} --function="getNb" --proxy=${PROXY} 
+    if [ $# == 0 ]; then
+        erdpy --verbose contract query ${ADDRESS} --function="getNb" --proxy=${PROXY} 
+    else
+        erdpy --verbose contract query ${ADDRESS} --function="getNb"  --arguments $* --proxy=${PROXY} 
+    fi
+
 }
 
 # Param1 : Instance ID
@@ -428,6 +434,26 @@ getAllInfo() {
 
     erdpy --verbose contract query ${ADDRESS} --function="getAllInfo" --arguments $* --proxy=${PROXY} 
 }
+
+# Param1 : player pem wallet or '0'
+# Param2 : start iid
+# Param3 : max number of instances to return
+# Var params : Instance status filter (from 1 to 5 status can be provided)
+getAllInfoFrag() {
+    if [ $1 == "0" ]; then
+        PLAYER_HEX_ADDRESS=$ADDR_ZERO
+    else
+        BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $1`    
+        PLAYER_HEX_ADDRESS=`${SCRIPT_PATH}/${BECH32_UTIL} $BECH32_PEM_WALLET`
+        PLAYER_HEX_ADDRESS="0x${PLAYER_HEX_ADDRESS}"
+    fi
+    
+    # replace arg1 with hex address
+    set -- $PLAYER_HEX_ADDRESS "${@:2}"
+
+    erdpy --verbose contract query ${ADDRESS} --function="getAllInfoFrag" --arguments $* --proxy=${PROXY} 
+}
+
 
 # Param1 : Instance ID
 getRemainingTime() {

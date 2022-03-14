@@ -143,8 +143,30 @@ pub trait InstanceModule:
     }
 
     #[view(getNb)]
-    fn get_nb_instances(&self) -> u32 {
-        return self.instance_info_mapper().len() as u32;
+    fn get_nb_instances(&self, #[var_args] status_filter: MultiValueManagedVec<InstanceStatus>) -> u32 {
+        let mut nb_instances: u32 = 0;
+
+        // Check overflow regarding the maximum possible values for status
+        if status_filter.len() <= InstanceStatus::VARIANT_COUNT {
+
+            if status_filter.len() == 0 {
+                // No filter provided, return the total number of instances, whatever the status of each instance
+                nb_instances = self.instance_info_mapper().len() as u32;
+            }
+            else {
+                // Return the total number of instances which meet the status filter provided in parameter
+                for iid in self.instance_info_mapper().keys() {
+                    for status in status_filter.iter() {
+                        if self.get_instance_status(iid) == status.clone() {
+                            nb_instances += 1;
+                            break;
+                        }   
+                    }
+                }
+            }
+        }
+
+        return nb_instances;
     }
 
     #[view(getRemainingTime)]
