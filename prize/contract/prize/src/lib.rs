@@ -358,10 +358,9 @@ pub trait Prize:
 
     #[view(getAllInfoFrag)]
     // Returns : 
-    //  - number of filtered instances returned, followed by 
     //  - boolean indicating if the last filtered iid is part of the return instances, followed by
     //  - information of up to <max_nb_instances_returned> filtered instances from <iid_start> 
-    fn get_all_instance_info_frag(&self, player_address: ManagedAddress, iid_start: u32, max_nb_instances_returned: u32, #[var_args] status_filter: MultiValueManagedVec<InstanceStatus>) -> MultiValue3<u32, bool, MultiValueManagedVec<GetInfoStruct<Self::Api>>> {
+    fn get_all_instance_info_frag(&self, player_address: ManagedAddress, iid_start: u32, max_nb_instances_returned: u32, #[var_args] status_filter: MultiValueManagedVec<InstanceStatus>) -> MultiValue2<bool, MultiValueManagedVec<GetInfoStruct<Self::Api>>> {
 
         let mut instances: MultiValueManagedVec<GetInfoStruct<Self::Api>> = MultiValueManagedVec::new();
         let mut instance_counter: u32 = 0;
@@ -387,16 +386,16 @@ pub trait Prize:
 
                                 // Record the last 
                                 last_filtered_iid_returned = iid;
-                                
-                                break;
                             }
+
+                            break;
                         }   
                     }
                 }
             }
         }
 
-        return MultiValue3((instance_counter, (instance_counter > 0) && (current_filtered_iid == last_filtered_iid_returned), instances));
+        return MultiValue2(((instance_counter > 0) && (current_filtered_iid == last_filtered_iid_returned), instances));
     }
 
     /////////////////////////////////////////////////////////////////////
