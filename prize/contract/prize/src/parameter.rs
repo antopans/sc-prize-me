@@ -77,6 +77,11 @@ pub trait ParameterModule:
         return MultiValue2((self.param_duration_min_mapper().get(), self.param_duration_max_mapper().get()));     
     }
 
+    #[view(getParamSponsorInfoMaxLength)]
+    fn get_param_sponsor_info_max_length(&self) -> u32 {        
+        return self.param_sponsor_info_max_length_mapper().get(); 
+    }
+
     /////////////////////////////////////////////////////////////////////
     // Mappers
     /////////////////////////////////////////////////////////////////////

@@ -118,6 +118,10 @@ setParamSponsorInfoMaxLength() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setParamSponsorInfoMaxLength" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
+getParamSponsorInfoMaxLength() {
+    erdpy --verbose contract query ${ADDRESS} --function="getParamSponsorInfoMaxLength" --proxy=${PROXY} 
+}
+
 getAddrBlacklist() {
     erdpy --verbose contract query ${ADDRESS} --function="getAddrBlacklist" --proxy=${PROXY} 
 }

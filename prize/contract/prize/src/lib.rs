@@ -169,16 +169,29 @@ pub trait Prize:
 
     #[only_owner]
     #[endpoint(cleanClaimed)]
-    fn clean_claimed_instances(&self) -> SCResult<()> {        
-        let claimed_instances: MultiValueManagedVec<u32> = self.get_instance_ids(MultiValueManagedVec::from_single_item(InstanceStatus::Claimed));
+    fn clean_claimed_instances(&self, #[var_args] iids: MultiValueManagedVec<u32>) -> SCResult<()> {   
+        let claimed_instances: MultiValueManagedVec<u32>;
+
+        if iids.len() == 0 {
+            // Find all claimed instances if no IID is provided
+            claimed_instances = self.get_instance_ids(MultiValueManagedVec::from_single_item(InstanceStatus::Claimed));
+        }
+        else {
+            // Use provided IIDs otherwise
+            claimed_instances = iids;
+        }     
 
         for iid in claimed_instances.iter() {
-            self.clear_players(iid.clone());
-            self.instance_info_mapper().remove(&iid);
-            self.instance_state_mapper().remove(&iid);
 
-            // Log event
-            self.event_wrapper_clean_claim(iid.clone());
+            if self.get_instance_status(iid) == InstanceStatus::Claimed {
+
+                self.clear_players(iid.clone());
+                self.instance_info_mapper().remove(&iid);
+                self.instance_state_mapper().remove(&iid);
+
+                // Log event
+                self.event_wrapper_clean_claim(iid.clone());
+            }
         }
 
         Ok(())
