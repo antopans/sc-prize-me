@@ -1,0 +1,28 @@
+{
+	"name": "trigger esdt instance ",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "trigger",
+			"comment": "admin triggers esdt instance",
+			"tx": {
+				"from": "address:owner",
+				"to": "sc:prize",
+				"egldValue": "0",
+				"function": "prize",
+				"arguments": [
+					"2"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "0",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}

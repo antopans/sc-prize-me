@@ -1,16 +1,17 @@
 {
-	"name": "distributePrizes endpoint",
+	"name": "trigger egld instance ",
 	"steps": [
 		{
 			"step": "scCall",
-			"txId": "distributePrizes",
-			"comment": "admin calls distributePrizes endpoint",
+			"txId": "trigger",
+			"comment": "admin triggers egld instance",
 			"tx": {
 				"from": "address:owner",
 				"to": "sc:prize",
 				"egldValue": "0",
-				"function": "distributePrizes",
+				"function": "prize",
 				"arguments": [
+					"1"
 				],
 				"gasLimit": "5,000,000,000",
 				"gasPrice": "0"

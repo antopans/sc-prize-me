@@ -8,10 +8,6 @@
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/admin_actions/admin_distributePrizes_bad_caller.steps.json"
-		},
-		{
-			"step": "externalSteps",
 			"path": "steps/admin_actions/admin_cleanClaimed_bad_caller.steps.json"
 		},
 		{

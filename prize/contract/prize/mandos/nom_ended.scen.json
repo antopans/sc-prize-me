@@ -1,14 +1,10 @@
 {
-	"name": "distributePrizes",
-	"comment": "Call distributePrizes with the following contexts : 0, 1, 2, 3, 4 prizes ended",
+	"name": "trigger",
+	"comment": "Call trigger with the following contexts : 0, 1, 2, 3, 4 prizes ended",
 	"steps": [
 		{
 			"step": "externalSteps",
 			"path": "steps/initial_setup.steps.json"
-		},
-		{
-			"step": "externalSteps",
-			"path": "steps/admin_actions/admin_distributePrizes.steps.json"
 		},
 		{
 			"step": "externalSteps",

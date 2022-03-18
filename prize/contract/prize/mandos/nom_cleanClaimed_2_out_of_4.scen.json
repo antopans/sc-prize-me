@@ -16,7 +16,15 @@
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/admin_actions/admin_distributePrizes.steps.json"
+			"path": "steps/admin_actions/admin_trigger_egld_prize.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_trigger_esdt_prize.steps.json"
+		},
+		{
+			"step": "externalSteps",
+			"path": "steps/admin_actions/admin_trigger_nft_prize.steps.json"
 		},
 		{
 			"step": "externalSteps",

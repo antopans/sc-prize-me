@@ -39,10 +39,6 @@ claimDeveloperRewards()
 # Administrator API
 ######################################################################
 
-distributePrizes() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=500000000 --function="distributePrizes" --send --proxy=${PROXY} --chain=${CHAIN}
-}
-
 cleanClaimed() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=500000000 --function="cleanClaimed" --send --proxy=${PROXY} --chain=${CHAIN}
 }
@@ -376,6 +372,12 @@ createNft() {
     TX_DATA="${TX_TOKEN_DATA}@${TX_SC_CREATE_DATA}"  
 
     erdpy --verbose tx new --receiver=${BECH32_PEM_WALLET} --recall-nonce --pem=$2 --gas-limit=50000000 --data=${TX_DATA} --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
+# Param1 : Instance ID
+# Param2 : pem wallet
+trigger() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=500000000 --function="prize" --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 ######################################################################

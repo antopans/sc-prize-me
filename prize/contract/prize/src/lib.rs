@@ -93,80 +93,6 @@ pub trait Prize:
     /////////////////////////////////////////////////////////////////////
     // Administrator endpoints
     /////////////////////////////////////////////////////////////////////
-
-    #[only_owner]
-    #[endpoint(distributePrizes)]
-    fn distributed_prizes(&self, #[var_args] iids: MultiValueManagedVec<u32>) -> SCResult<()> {
-
-        let ended_instances: MultiValueManagedVec<u32>;
-
-        if iids.len() == 0 {
-            // Find all ended instances if no IID is provided
-            ended_instances = self.get_instance_ids(MultiValueManagedVec::from_single_item(InstanceStatus::Ended));
-        }
-        else {
-            // Use provided IIDs otherwise
-            ended_instances = iids;
-        }
-
-        for iid in ended_instances.iter() {
-
-            if self.get_instance_status(iid) == InstanceStatus::Ended {
-
-                // Get instance info & state
-                let instance_info = self.instance_info_mapper().get(&iid).unwrap();
-                let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
-
-                if instance_info.charity == true {
-                    // Add sponsor rewards to charity pool
-                    self.charity_pool_mapper().update(|current_donations| *current_donations += instance_state.reward_info.pool.clone());
-                } 
-                else {
-                    // Send rewards to sponsor
-                    self.pay_rewards_to_sponsor(iid.clone(), instance_info.sponsor_info.address.clone(), instance_state.reward_info.pool.clone());
-                }            
-
-                // Choose winner
-                let nb_players: usize = self.get_nb_players(iid.clone());
-
-                if  nb_players == 0 {
-                    // No player, give prize back to instance sponsor
-                    instance_state.winner_info.address = instance_info.sponsor_info.address.clone();
-                } 
-                else {
-                    // Choose random ticket number
-                    let mut rand = RandomnessSource::<Self::Api>::new();       
-                    let winning_ticket = rand.next_usize_in_range(1, nb_players + 1);
-                    instance_state.winner_info.ticket_number = winning_ticket.clone();
-                    instance_state.winner_info.address = self.get_ticket_owner(iid.clone(), winning_ticket);
-                }
-
-                // Auto-distribution of prize if enabled
-                if self.param_manual_claim_mapper().get() == false {
-                    // Send prize to winner address
-                    self.func_send_prize(&instance_info.prize_info, &instance_state.winner_info.address);
-
-                    // Update claimed status
-                    instance_state.claimed_status = true;
-
-                    // Log event
-                    self.event_wrapper_auto_claim_prize(iid.clone());
-                }
-                
-                // Log event
-                self.event_wrapper_trigger(iid.clone(), instance_state.winner_info.ticket_number, &instance_state.winner_info.address);
-                
-                // Record new instance state
-                self.instance_state_mapper().insert(iid.clone(), instance_state);   
-
-                // Update nb of running instances for the sponsor
-                self.nb_instances_running_mapper(instance_info.sponsor_info.address).update(|current| *current -= 1);
-            }
-        }
-
-        Ok(())
-    }
-
     #[only_owner]
     #[endpoint(cleanClaimed)]
     fn clean_claimed_instances(&self, #[var_args] iids: MultiValueManagedVec<u32>) -> SCResult<()> {   
@@ -265,6 +191,67 @@ pub trait Prize:
 
         // Format result
         Ok_some!(new_iid);
+    }
+
+    #[endpoint(prize)]
+    fn trigger(&self, iid: u32) -> SCResult<()> {
+
+        require!(self.get_instance_status(iid) == InstanceStatus::Ended, "Instance is not in the expected state");
+
+        // Get instance info & state
+        let instance_info = self.instance_info_mapper().get(&iid).unwrap();
+        let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
+
+        // Check caller is instance creator or SC owner
+        let caller = self.blockchain().get_caller();
+        require!(caller == instance_info.sponsor_info.address.clone() || caller == self.blockchain().get_owner_address(), "Bad caller");
+
+        if instance_info.charity == true {
+            // Add sponsor rewards to charity pool
+            self.charity_pool_mapper().update(|current_donations| *current_donations += instance_state.reward_info.pool.clone());
+        } 
+        else {
+            // Send rewards to sponsor
+            self.pay_rewards_to_sponsor(iid.clone(), instance_info.sponsor_info.address.clone(), instance_state.reward_info.pool.clone());
+        }            
+
+        // Choose winner
+        let nb_players: usize = self.get_nb_players(iid.clone());
+
+        if  nb_players == 0 {
+            // No player, give prize back to instance sponsor
+            instance_state.winner_info.address = instance_info.sponsor_info.address.clone();
+        } 
+        else {
+            // Choose random ticket number
+            let mut rand = RandomnessSource::<Self::Api>::new();       
+            let winning_ticket = rand.next_usize_in_range(1, nb_players + 1);
+            instance_state.winner_info.ticket_number = winning_ticket.clone();
+            instance_state.winner_info.address = self.get_ticket_owner(iid.clone(), winning_ticket);
+        }
+
+        // Auto-distribution of prize if enabled
+        if self.param_manual_claim_mapper().get() == false {
+            // Send prize to winner address
+            self.func_send_prize(&instance_info.prize_info, &instance_state.winner_info.address);
+
+            // Update claimed status
+            instance_state.claimed_status = true;
+
+            // Log event
+            self.event_wrapper_auto_claim_prize(iid.clone());
+        }
+        
+        // Log event
+        self.event_wrapper_trigger(iid.clone(), instance_state.winner_info.ticket_number, &instance_state.winner_info.address);
+        
+        // Record new instance state
+        self.instance_state_mapper().insert(iid.clone(), instance_state);   
+
+        // Update nb of running instances for the sponsor
+        self.nb_instances_running_mapper(instance_info.sponsor_info.address).update(|current| *current -= 1);
+
+        Ok(())
     }
 
     /////////////////////////////////////////////////////////////////////

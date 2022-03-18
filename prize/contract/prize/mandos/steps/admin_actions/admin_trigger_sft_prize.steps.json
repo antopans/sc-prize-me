@@ -1,0 +1,28 @@
+{
+	"name": "trigger nft instance ",
+	"steps": [
+		{
+			"step": "scCall",
+			"txId": "trigger",
+			"comment": "admin triggers nft instance",
+			"tx": {
+				"from": "address:owner",
+				"to": "sc:prize",
+				"egldValue": "0",
+				"function": "prize",
+				"arguments": [
+					"4"
+				],
+				"gasLimit": "5,000,000,000",
+				"gasPrice": "0"
+			},
+			"expect": {
+				"out": [
+				],
+				"status": "0",
+				"gas": "*",
+				"refund": "*"
+			}
+		}
+	]
+}

@@ -20,7 +20,7 @@
 		},
 		{
 			"step": "externalSteps",
-			"path": "steps/admin_actions/admin_distributePrizes.steps.json"
+			"path": "steps/admin_actions/admin_trigger_sft_prize.steps.json"
 		},
 		{
 			"step": "externalSteps",
