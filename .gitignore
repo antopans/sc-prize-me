@@ -1,0 +1,4 @@
+meta/target
+wasm/target
+output
+deploy-devnet.interaction.json
