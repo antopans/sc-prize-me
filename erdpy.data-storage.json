@@ -3,6 +3,8 @@
         "address-devnet": "erd1qqqqqqqqqqqqqpgqz5c8lzau0xx3krqffdd9xj8raqmg3awyyp0sx8r8d8",
         "deployTransaction-devnet": "d097579961f5d62e9f96d5ee01bb22033e6d12eae209d6a8477b258564e0685b",
         "address-testnet": "erd1qqqqqqqqqqqqqpgqxgu96a2clv4tjx7g2zvuagj3nzpcq748yp0smr2dkr",
-        "deployTransaction-testnet": "01397879719f101d7a51ab3261ebfa6a6fa53a1bbffed11c864743f160156e55"
+        "deployTransaction-testnet": "01397879719f101d7a51ab3261ebfa6a6fa53a1bbffed11c864743f160156e55",
+        "address-mainnet": "erd1qqqqqqqqqqqqqpgqyu8p4pk6z6eqfc258jzw2nk66zvvda7uaakqpkzelp",
+        "deployTransaction-mainnet": "1fea3f028af1d155e9b31ae71bc28938d51ec193e484dcd94af4e75a034afb6e"
     }
 }

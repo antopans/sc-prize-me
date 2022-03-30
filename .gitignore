@@ -2,3 +2,5 @@ meta/target
 wasm/target
 output
 deploy-devnet.interaction.json
+deploy-testnet.interaction.json
+deploy-mainnet.interaction.json
