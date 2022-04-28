@@ -538,3 +538,7 @@ hasWon() {
 
     erdpy --verbose contract query ${ADDRESS} --function="hasWon" --arguments $1 "0x${PLAYER_HEX_ADDRESS}" --proxy=${PROXY} 
 }
+
+getTotalPlayers() {
+    erdpy --verbose contract query ${ADDRESS} --function="getTotalPlayers" --proxy=${PROXY} 
+}

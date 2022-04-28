@@ -18,6 +18,18 @@ pub trait PlayerModule:
     /////////////////////////////////////////////////////////////////////
     // Queries
     /////////////////////////////////////////////////////////////////////
+    #[view(getTotalPlayers)]
+    fn get_total_players(&self) -> usize {
+        let mut total_players: usize = 0;
+
+        // Compute sum of players of all lotteries
+        for iid in self.instance_info_mapper().keys() {
+            total_players += self.get_nb_players(iid);
+        }
+
+        return total_players;
+    }
+
     #[view(getPlayerIDs)]
     fn get_player_instances(&self, player_address: ManagedAddress) -> MultiValueManagedVec<u32> {
         let mut player_iids = MultiValueManagedVec::new();

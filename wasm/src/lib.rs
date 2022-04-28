@@ -35,6 +35,7 @@ elrond_wasm_node::wasm_endpoints! {
         getRemainingTime
         getSponsorIDs
         getStatus
+        getTotalPlayers
         hasPlayed
         hasStatus
         hasWon
