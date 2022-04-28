@@ -57,8 +57,9 @@ disable() {
 
 # Param1 : fees amount in EGLD
 # Param2 : sponsor reward in percent
+# Param3 : link reward in percent
 setFeePol() {
-    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setFeePol" --arguments $1 $2 --send --proxy=${PROXY} --chain=${CHAIN}
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="setFeePol" --arguments $1 $2 $3 --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 getFeePol() {
@@ -69,8 +70,20 @@ getFeePool() {
     erdpy --verbose contract query ${ADDRESS} --function="getFeePool" --proxy=${PROXY} 
 }
 
+# Param1 : address
+getLinkRewardPool() {
+    BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $1`    
+    HEX_ADDRESS=`${SCRIPT_PATH}/${BECH32_UTIL} $BECH32_PEM_WALLET`
+    erdpy --verbose contract query ${ADDRESS} --function="getLinkRewardPool" --arguments "0x${HEX_ADDRESS}" --proxy=${PROXY} 
+}
+
 claimFees() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=${OWNER} --gas-limit=50000000 --function="claimFees" --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
+# Param #1 : pem wallet
+claimLinkRewards() {
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$1 --gas-limit=50000000 --function="claimLinkRewards" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 getCharityPool() {
@@ -389,6 +402,18 @@ trigger() {
 # Param3 : fees : #1000000000000000 => 0.001 EGLD
 play() {
     erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=10000000 --function="play" --value=$3 --arguments $1 --send --proxy=${PROXY} --chain=${CHAIN}
+}
+
+# Param1 : Instance ID
+# Param2 : pem wallet
+# Param3 : fees : #1000000000000000 => 0.001 EGLD
+# Param4 : affiliation address
+playLinked() {
+    BECH32_PEM_WALLET=`grep -o -m 1 "erd[0-9a-z]*" $4`    
+    HEX_ADDRESS=`${SCRIPT_PATH}/${BECH32_UTIL} $BECH32_PEM_WALLET`
+    echo $HEX_ADDRESS
+
+    erdpy --verbose contract call ${ADDRESS} --recall-nonce --pem=$2 --gas-limit=10000000 --function="play" --value=$3 --arguments $1 "0x${HEX_ADDRESS}" --send --proxy=${PROXY} --chain=${CHAIN}
 }
 
 # Param1 : Instance ID

@@ -10,6 +10,7 @@ elrond_wasm_node::wasm_endpoints! {
         addAddrBlacklist
         claimDonations
         claimFees
+        claimLinkRewards
         claimPrize
         cleanClaimed
         create
@@ -22,6 +23,7 @@ elrond_wasm_node::wasm_endpoints! {
         getFeePool
         getIDs
         getInfo
+        getLinkRewardPool
         getLogEnableStatus
         getNb
         getNbSponsorRunning

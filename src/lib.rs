@@ -64,6 +64,7 @@ pub trait Prize:
         const DEFAULT_MAX_NB_INSTANCES_PER_SPONSOR: u32 = 20;
         const DEFAULT_FEE_AMOUNT_EGLD: u32 = 0;
         const DEFAULT_SPONSOR_REWARD_PERCENT: u8 = 0;
+        const DEFAULT_LINK_REWARD_PERCENT: u8 = 0;
         const DEFAULT_MAX_SPONSOR_INFO_LENGTH: u32 = 1000;
         
         // Initializations @ deployment only 
@@ -79,7 +80,7 @@ pub trait Prize:
         self.param_sponsor_info_max_length_mapper().set_if_empty(&DEFAULT_MAX_SPONSOR_INFO_LENGTH);
 
         // Fees
-        self.init_fees_if_empty(BigUint::from(DEFAULT_FEE_AMOUNT_EGLD), DEFAULT_SPONSOR_REWARD_PERCENT);
+        self.init_fees_if_empty(BigUint::from(DEFAULT_FEE_AMOUNT_EGLD), DEFAULT_SPONSOR_REWARD_PERCENT, DEFAULT_LINK_REWARD_PERCENT);
 
         // Charity
         self.init_donations_if_empty();
@@ -260,7 +261,7 @@ pub trait Prize:
     #[payable("EGLD")]
     #[endpoint(play)]
     // Returns : Result, optional (ticket number)  
-    fn play(&self, #[payment] fees: BigUint, iid: u32) -> MultiValue2<SCResult<()>, OptionalValue<usize>> {
+    fn play(&self, #[payment] fees: BigUint, iid: u32, #[var_args] link_address: OptionalValue<ManagedAddress>) -> MultiValue2<SCResult<()>, OptionalValue<usize>> {
 
         // Checks
         let caller = self.blockchain().get_caller();
@@ -269,9 +270,9 @@ pub trait Prize:
         require_with_opt!(self.has_played(iid, caller.clone()) == false, "Player has already played");
         require_with_opt!(fees == self.fee_policy_mapper().get().fee_amount_egld, "Wrong fees amount");
 
-        // Capitalize fees and sponsor rewards
+        // Capitalize fees, sponsor rewards and optional link rewards
         let mut instance_state = self.instance_state_mapper().get(&iid).unwrap();
-        instance_state.reward_info.pool += self.update_fees_and_compute_rewards(fees.clone(), BigUint::from(instance_state.reward_info.percent));
+        instance_state.reward_info.pool += self.update_fees_and_compute_rewards(fees.clone(), instance_state.reward_info.percent, link_address.into_option());
         self.event_wrapper_reward_pool_info(iid, &instance_state.reward_info.pool); 
         self.instance_state_mapper().insert(iid, instance_state);
         

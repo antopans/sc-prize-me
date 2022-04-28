@@ -151,6 +151,20 @@ pub trait EventModule {
         }
     }
 
+    fn event_wrapper_claim_link_rewards(
+        &self,
+        reward_amount: &BigUint,
+        link_address: &ManagedAddress
+    ) {
+        if self.log_enable_mapper().get() == true {
+            self.claim_link_rewards_event(
+                self.blockchain().get_block_epoch(),
+                reward_amount,
+                link_address
+            );
+        }
+    }
+
     fn event_wrapper_claim_donations(
         &self,
         donations_amount: &BigUint
@@ -219,13 +233,15 @@ pub trait EventModule {
     fn event_wrapper_set_fee_policy(
         &self,
         fee_amount_egld: &BigUint,
-        sponsor_reward_percent: u8
+        sponsor_reward_percent: u8,
+        link_reward_percent: u8
     ) {
         if self.log_enable_mapper().get() == true {
             self.set_fee_policy_event(
                 self.blockchain().get_block_epoch(),
                 fee_amount_egld,
-                sponsor_reward_percent
+                sponsor_reward_percent,
+                link_reward_percent
             );
         }
     }
@@ -378,6 +394,14 @@ pub trait EventModule {
         #[indexed] fee_amount: &BigUint
     ); 
 
+    #[event("claim_link_rewards")]
+    fn claim_link_rewards_event(
+        &self,
+        #[indexed] epoch: u64,
+        #[indexed] reward_amount: &BigUint,
+        #[indexed] link_address: &ManagedAddress
+    ); 
+
     #[event("claim_donations")]
     fn claim_donations_event(
         &self,
@@ -421,7 +445,8 @@ pub trait EventModule {
         &self,
         #[indexed] epoch: u64,
         #[indexed] fee_amount_egld: &BigUint,
-        #[indexed] sponsor_reward_percent: u8
+        #[indexed] sponsor_reward_percent: u8,
+        #[indexed] link_reward_percent: u8
     ); 
 
     #[event("set_param_duration")]
