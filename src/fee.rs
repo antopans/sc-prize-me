@@ -120,19 +120,23 @@ pub trait FeeModule:
         let mut link_reward_percent: u8 = 0;
         let mut sponsor_reward_amount: BigUint = BigUint::zero();
         let link_reward_amount: BigUint;
+        let caller = self.blockchain().get_caller();
 
         // Capitalize fees and compute sponsor rewards
         if fees != BigUint::zero() {
 
             // Apply link rewards only if an affiliation link address has been provided
             if link_address.is_some() == true {
-                link_reward_percent = self.fee_policy_mapper().get().link_reward_percent;
+                // Link rewards are only applied if the player does not play wih its own affiliate link
+                if link_address.clone().unwrap() != caller {
+                    link_reward_percent = self.fee_policy_mapper().get().link_reward_percent;
 
-                // Sponsor reward percent is the value at the lottery creation while Link reward percent is the current value
-                // Ensure the sum of rewards does not overflow the fees (100 %); truncate link reward if so
-                // This is a safeguard measure, this condition should never be true
-                if (sponsor_reward_percent + link_reward_percent) > 100 {
-                    link_reward_percent = 100 - sponsor_reward_percent;
+                    // Sponsor reward percent is the value at the lottery creation while Link reward percent is the current value
+                    // Ensure the sum of rewards does not overflow the fees (100 %); truncate link reward if so
+                    // This is a safeguard measure, this condition should never be true
+                    if (sponsor_reward_percent + link_reward_percent) > 100 {
+                        link_reward_percent = 100 - sponsor_reward_percent;
+                    }
                 }
             };
             
