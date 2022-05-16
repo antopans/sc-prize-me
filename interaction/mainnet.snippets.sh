@@ -12,7 +12,7 @@ PASS_FILE="../wallets/wallet_owner_pass_prize-me"
 # SC Management
 ######################################################################
 deploy() {
-    erdpy --verbose contract deploy --bytecode ${BYTECODE} --recall-nonce --keyfile=${KEY_FILE} --passfile=${PASS_FILE} --gas-limit=150000000 --send --outfile="deploy-mainnet.interaction.json" --proxy=${PROXY} --chain=${CHAIN} || return
+    erdpy --verbose contract deploy --bytecode ${BYTECODE} --recall-nonce --keyfile=${KEY_FILE} --passfile=${PASS_FILE} --gas-limit=110000000 --send --outfile="deploy-mainnet.interaction.json" --proxy=${PROXY} --chain=${CHAIN} || return
 
     TRANSACTION=$(erdpy data parse --file="deploy-mainnet.interaction.json" --expression="data['emitted_tx']['hash']")
     ADDRESS=$(erdpy data parse --file="deploy-mainnet.interaction.json" --expression="data['emitted_tx']['address']")
@@ -25,5 +25,5 @@ deploy() {
 }
 
 upgrade() {
-    erdpy --verbose contract upgrade ${ADDRESS} --bytecode ${BYTECODE} --recall-nonce --keyfile=${KEY_FILE} --passfile=${PASS_FILE} --gas-limit=150000000 --send --outfile="deploy-mainnet.interaction.json" --proxy=${PROXY} --chain=${CHAIN} || return
+    erdpy --verbose contract upgrade ${ADDRESS} --bytecode ${BYTECODE} --recall-nonce --keyfile=${KEY_FILE} --passfile=${PASS_FILE} --gas-limit=110000000 --send --outfile="deploy-mainnet.interaction.json" --proxy=${PROXY} --chain=${CHAIN} || return
 }
